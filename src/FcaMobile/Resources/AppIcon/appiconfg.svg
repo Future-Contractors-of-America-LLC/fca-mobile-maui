@@ -1,3 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 456 456">
-  <text x="228" y="270" text-anchor="middle" font-family="Arial,sans-serif" font-size="160" font-weight="700" fill="#D4A017">FCA</text>
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2026 Future Contractors of America LLC. All rights reserved. -->
+<!-- Auricrux Crux Mark - canonical design mark (star + crux + crossbar). -->
+<svg width="1024" height="1024" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="auricruxCoreGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(60 60) rotate(90) scale(58)">
+      <stop stop-color="#FFF4D1"/>
+      <stop offset="0.5" stop-color="#D49A22"/>
+      <stop offset="1" stop-color="#8A5A12"/>
+    </radialGradient>
+    <linearGradient id="auricruxEdge" x1="18" y1="18" x2="102" y2="102" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFE8AA"/>
+      <stop offset="1" stop-color="#B77912"/>
+    </linearGradient>
+    <linearGradient id="auricruxCrux" x1="60" y1="34" x2="60" y2="88" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2C1803"/>
+      <stop offset="1" stop-color="#5A320A"/>
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="52" fill="url(#auricruxCoreGlow)" stroke="url(#auricruxEdge)" stroke-width="4"/>
+  <path d="M60 20L69 39L89 41L73.5 54L78 74L60 64L42 74L46.5 54L31 41L51 39L60 20Z" fill="#FFF3C8" fill-opacity="0.35"/>
+  <path d="M60 33L66 45L79 46L69 55L72 68L60 62L48 68L51 55L41 46L54 45L60 33Z" fill="#FFE9A4" fill-opacity="0.7" stroke="#7C5313" stroke-width="2"/>
+  <path d="M60 40L67 49V58L60 66L53 58V49L60 40Z" fill="url(#auricruxCrux)"/>
+  <path d="M60 66V84" stroke="url(#auricruxCrux)" stroke-width="7" stroke-linecap="round"/>
+  <path d="M47 71H73" stroke="url(#auricruxCrux)" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="60" cy="60" r="51" stroke="#4B3208" stroke-opacity="0.22" stroke-width="1.5"/>
 </svg>

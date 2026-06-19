@@ -1,4 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 456 456">
-  <rect width="456" height="456" rx="96" fill="#0D1220"/>
-  <text x="228" y="270" text-anchor="middle" font-family="Arial,sans-serif" font-size="160" font-weight="700" fill="#D4A017">FCA</text>
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2026 Future Contractors of America LLC. All rights reserved. -->
+<!-- FCA Hex Mark - canonical design mark for trademark registration (Class 9/42). -->
+<!-- Do not modify geometry without updating BRAND_MANIFEST.json version. -->
+<svg width="1024" height="1024" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="fcaBlue" x1="40" y1="28" x2="212" y2="224" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7AA5FF"/>
+      <stop offset="0.52" stop-color="#4F7CFF"/>
+      <stop offset="1" stop-color="#355BDB"/>
+    </linearGradient>
+    <linearGradient id="fcaBlueDark" x1="68" y1="88" x2="200" y2="212" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3F6BEE"/>
+      <stop offset="1" stop-color="#2747B4"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="#0D1220"/>
+  <path d="M128 28L214 77.5V176L174 199V100.5L128 74L82 100.5V199L42 176V77.5L128 28Z" fill="url(#fcaBlue)"/>
+  <path d="M128 28V74L174 100.5L214 77.5L128 28Z" fill="#8EB3FF" fill-opacity="0.92"/>
+  <path d="M82 100.5L128 74V28L42 77.5L82 100.5Z" fill="#5F8FFF" fill-opacity="0.95"/>
+  <path d="M82 100.5V199L128 172V128L82 100.5Z" fill="url(#fcaBlueDark)" fill-opacity="0.95"/>
+  <path d="M174 100.5V199L128 172V128L174 100.5Z" fill="#4874F5" fill-opacity="0.88"/>
+  <path d="M98 118L128 100L158 118V145L128 163L98 145V118Z" fill="#0D1220"/>
 </svg>
