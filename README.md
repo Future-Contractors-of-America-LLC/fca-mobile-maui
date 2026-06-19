@@ -1,6 +1,6 @@
-# FCA Contractor Command — Mobile (C# / .NET MAUI)
+# FCA Contractor Command - Mobile (C# / .NET MAUI)
 
-Native iOS and Android app for **Future Contractors of America**. Pure C# — no JavaScript or Python in the mobile codebase.
+Native iOS and Android app for **Future Contractors of America**. Pure C# - no JavaScript or Python in the mobile codebase.
 
 Connects to the live FCA platform:
 
@@ -13,17 +13,17 @@ Connects to the live FCA platform:
 |------|----------------|
 | Lead pipeline | Leads tab |
 | Job sites | Jobs tab |
-| Plan room | Command Center ? Plan room |
-| Billing | Command Center ? Billing |
-| Communications | Command Center ? Customer communications |
-| Customer success | Command Center ? Customer success |
+| Plan room | Command Center > Plan room |
+| Billing | Command Center > Billing |
+| Communications | Command Center > Customer communications |
+| Customer success | Command Center > Customer success |
 | Workforce training | Training tab |
 
 ## Stack
 
 - .NET 8 + .NET MAUI
 - Targets: `net8.0-android`, `net8.0-ios`
-- CI: GitHub Actions (`maui-ci.yml`) — Android on Windows, iOS on macOS
+- CI: GitHub Actions (`maui-ci.yml`) - Android on Windows, iOS on macOS
 
 ## Local build
 
@@ -40,6 +40,12 @@ For iOS (macOS only):
 ```powershell
 dotnet build src/FcaMobile/FcaMobile.csproj -c Release -f net8.0-ios
 ```
+
+## Security notes
+
+- Customer credentials are never persisted. Only non-sensitive profile data
+  (company, name, email, plan) is cached in local preferences.
+- All platform traffic is over HTTPS.
 
 ## Legacy note
 

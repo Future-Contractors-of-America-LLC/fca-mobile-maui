@@ -23,5 +23,7 @@
   </array>
   <key>CFBundleDisplayName</key>
   <string>FCA Contractor Command</string>
+  <key>ITSAppUsesNonExemptEncryption</key>
+  <false/>
 </dict>
 </plist>
