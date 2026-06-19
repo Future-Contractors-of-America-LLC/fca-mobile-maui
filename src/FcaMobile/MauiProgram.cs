@@ -30,9 +30,7 @@ public static class MauiProgram
         builder.Services.AddTransient<Pages.PlansPage>();
         builder.Services.AddTransient<Pages.AccountPage>();
 
-#if DEBUG
         builder.Logging.AddDebug();
-#endif
 
         return builder.Build();
     }
