@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Fca.Mobile.Models;
@@ -15,7 +17,21 @@ public sealed class FcaApiClient
 
     public FcaApiClient(FcaConfig config)
     {
-        _http = new HttpClient { BaseAddress = new Uri($"{config.PlatformBaseUrl.TrimEnd('/')}/api/") };
+        // Persist session cookies returned by customer-login so subsequent
+        // authenticated calls (bids, projects, files, ...) carry the session.
+        var handler = new HttpClientHandler
+        {
+            CookieContainer = new CookieContainer(),
+            UseCookies = true,
+        };
+
+        _http = new HttpClient(handler)
+        {
+            BaseAddress = new Uri($"{config.PlatformBaseUrl.TrimEnd('/')}/api/"),
+            Timeout = TimeSpan.FromSeconds(30),
+        };
+        _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        _http.DefaultRequestHeaders.UserAgent.ParseAdd("FcaMobile/1.0 (MAUI)");
     }
 
     public async Task<bool> SignInAsync(string email, string password, CancellationToken ct = default)
@@ -23,9 +39,27 @@ public sealed class FcaApiClient
         var response = await _http.PostAsJsonAsync("customer-login", new { email, password }, ct);
         if (!response.IsSuccessStatusCode)
             return false;
+
         var json = await response.Content.ReadAsStringAsync(ct);
-        using var doc = JsonDocument.Parse(json);
-        return doc.RootElement.TryGetProperty("ok", out var ok) && ok.GetBoolean();
+        if (string.IsNullOrWhiteSpace(json))
+            return true;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.ValueKind == JsonValueKind.Object &&
+                doc.RootElement.TryGetProperty("ok", out var ok) &&
+                ok.ValueKind is JsonValueKind.True or JsonValueKind.False)
+            {
+                return ok.GetBoolean();
+            }
+        }
+        catch (JsonException)
+        {
+            // Non-JSON success body still indicates a successful sign-in.
+        }
+
+        return true;
     }
 
     public async Task<IReadOnlyList<BidRecord>> GetLeadsAsync(CancellationToken ct = default)
