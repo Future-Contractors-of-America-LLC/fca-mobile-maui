@@ -18,11 +18,17 @@ public partial class PlanRoomPage : ContentPage
         await LoadAsync();
     }
 
-    async Task LoadAsync() => DocList.ItemsSource = await _api.GetDocumentsAsync();
-
-    async void OnRefreshing(object sender, EventArgs e)
+    async Task LoadAsync()
     {
-        await LoadAsync();
-        RefreshHost.IsRefreshing = false;
+        try
+        {
+            DocList.ItemsSource = await _api.GetDocumentsAsync();
+        }
+        finally
+        {
+            RefreshHost.IsRefreshing = false;
+        }
     }
+
+    async void OnRefreshing(object sender, EventArgs e) => await LoadAsync();
 }

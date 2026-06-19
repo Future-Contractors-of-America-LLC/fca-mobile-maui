@@ -18,11 +18,17 @@ public partial class LeadPipelinePage : ContentPage
         await LoadAsync();
     }
 
-    async Task LoadAsync() => LeadList.ItemsSource = await _api.GetLeadsAsync();
-
-    async void OnRefreshing(object sender, EventArgs e)
+    async Task LoadAsync()
     {
-        await LoadAsync();
-        RefreshHost.IsRefreshing = false;
+        try
+        {
+            LeadList.ItemsSource = await _api.GetLeadsAsync();
+        }
+        finally
+        {
+            RefreshHost.IsRefreshing = false;
+        }
     }
+
+    async void OnRefreshing(object sender, EventArgs e) => await LoadAsync();
 }

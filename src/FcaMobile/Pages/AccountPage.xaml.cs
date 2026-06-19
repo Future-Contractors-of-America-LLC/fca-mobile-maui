@@ -23,8 +23,17 @@ public partial class AccountPage : ContentPage
         PlanLabel.Text = string.IsNullOrWhiteSpace(profile?.Plan) ? "Plan: startup" : $"Plan: {profile.Plan}";
     }
 
-    async void OnBillingClicked(object sender, EventArgs e) =>
-        await Launcher.OpenAsync(new Uri($"{_config.WebsiteUrl.TrimEnd('/')}/portal/billing"));
+    async void OnBillingClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            await Launcher.OpenAsync(new Uri($"{_config.WebsiteUrl.TrimEnd('/')}/portal/billing"));
+        }
+        catch (Exception)
+        {
+            await DisplayAlert("Unable to open billing", "We could not open the billing portal. Please try again from your browser.", "OK");
+        }
+    }
 
     async void OnSignOutClicked(object sender, EventArgs e)
     {

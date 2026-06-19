@@ -19,7 +19,17 @@ public partial class CustomerSuccessPage : ContentPage
         await LoadAsync();
     }
 
-    async Task LoadAsync() => CaseList.ItemsSource = await _api.GetSupportCasesAsync();
+    async Task LoadAsync()
+    {
+        try
+        {
+            CaseList.ItemsSource = await _api.GetSupportCasesAsync();
+        }
+        finally
+        {
+            RefreshHost.IsRefreshing = false;
+        }
+    }
 
     async void OnCreateClicked(object sender, EventArgs e)
     {
@@ -32,15 +42,29 @@ public partial class CustomerSuccessPage : ContentPage
             return;
         }
 
-        await _api.CreateSupportCaseAsync(subject, priority, detail);
-        SubjectEntry.Text = "";
-        DetailEditor.Text = "";
-        await LoadAsync();
+        var button = sender as Button;
+        if (button is not null)
+            button.IsEnabled = false;
+
+        try
+        {
+            var created = await _api.CreateSupportCaseAsync(subject, priority, detail);
+            if (!created)
+            {
+                await DisplayAlert("Case not opened", "We could not open your support case. Check your connection and try again.", "OK");
+                return;
+            }
+
+            SubjectEntry.Text = "";
+            DetailEditor.Text = "";
+            await LoadAsync();
+        }
+        finally
+        {
+            if (button is not null)
+                button.IsEnabled = true;
+        }
     }
 
-    async void OnRefreshing(object sender, EventArgs e)
-    {
-        await LoadAsync();
-        RefreshHost.IsRefreshing = false;
-    }
+    async void OnRefreshing(object sender, EventArgs e) => await LoadAsync();
 }

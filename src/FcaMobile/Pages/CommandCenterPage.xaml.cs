@@ -22,27 +22,31 @@ public partial class CommandCenterPage : ContentPage
 
     async Task LoadAsync()
     {
-        var profile = _store.Load();
-        GreetingLabel.Text = profile?.Company is { Length: > 0 } company
-            ? $"{company} Command Center"
-            : "Your Command Center";
+        try
+        {
+            var profile = _store.Load();
+            GreetingLabel.Text = profile?.Company is { Length: > 0 } company
+                ? $"{company} Command Center"
+                : "Your Command Center";
 
-        var leads = await _api.GetLeadsAsync();
-        var jobs = await _api.GetJobsAsync();
-        var docs = await _api.GetDocumentsAsync();
-        var training = await _api.GetTrainingAsync();
+            var leadsTask = _api.GetLeadsAsync();
+            var jobsTask = _api.GetJobsAsync();
+            var docsTask = _api.GetDocumentsAsync();
+            var trainingTask = _api.GetTrainingAsync();
+            await Task.WhenAll(leadsTask, jobsTask, docsTask, trainingTask);
 
-        LeadCountLabel.Text = leads.Count.ToString();
-        JobCountLabel.Text = jobs.Count.ToString();
-        DocCountLabel.Text = docs.Count.ToString();
-        TrainingCountLabel.Text = (training?.Catalog?.Programs?.Count ?? 0).ToString();
+            LeadCountLabel.Text = leadsTask.Result.Count.ToString();
+            JobCountLabel.Text = jobsTask.Result.Count.ToString();
+            DocCountLabel.Text = docsTask.Result.Count.ToString();
+            TrainingCountLabel.Text = (trainingTask.Result?.Catalog?.Programs?.Count ?? 0).ToString();
+        }
+        finally
+        {
+            RefreshHost.IsRefreshing = false;
+        }
     }
 
-    async void OnRefreshing(object sender, EventArgs e)
-    {
-        await LoadAsync();
-        RefreshHost.IsRefreshing = false;
-    }
+    async void OnRefreshing(object sender, EventArgs e) => await LoadAsync();
 
     async void OnLeadsClicked(object sender, EventArgs e) => await Shell.Current.GoToAsync("//main/leads");
     async void OnPlanRoomClicked(object sender, EventArgs e) => await Shell.Current.GoToAsync("planroom");

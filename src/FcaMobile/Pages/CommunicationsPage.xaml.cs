@@ -19,7 +19,17 @@ public partial class CommunicationsPage : ContentPage
         await LoadAsync();
     }
 
-    async Task LoadAsync() => MessageList.ItemsSource = await _api.GetMessagesAsync();
+    async Task LoadAsync()
+    {
+        try
+        {
+            MessageList.ItemsSource = await _api.GetMessagesAsync();
+        }
+        finally
+        {
+            RefreshHost.IsRefreshing = false;
+        }
+    }
 
     async void OnSendClicked(object sender, EventArgs e)
     {
@@ -32,15 +42,29 @@ public partial class CommunicationsPage : ContentPage
             return;
         }
 
-        await _api.SendMessageAsync(subject, message, channel);
-        SubjectEntry.Text = "";
-        MessageEditor.Text = "";
-        await LoadAsync();
+        var button = sender as Button;
+        if (button is not null)
+            button.IsEnabled = false;
+
+        try
+        {
+            var sent = await _api.SendMessageAsync(subject, message, channel);
+            if (!sent)
+            {
+                await DisplayAlert("Message not sent", "We could not reach your FCA success team. Check your connection and try again.", "OK");
+                return;
+            }
+
+            SubjectEntry.Text = "";
+            MessageEditor.Text = "";
+            await LoadAsync();
+        }
+        finally
+        {
+            if (button is not null)
+                button.IsEnabled = true;
+        }
     }
 
-    async void OnRefreshing(object sender, EventArgs e)
-    {
-        await LoadAsync();
-        RefreshHost.IsRefreshing = false;
-    }
+    async void OnRefreshing(object sender, EventArgs e) => await LoadAsync();
 }

@@ -18,11 +18,17 @@ public partial class InvoicesPage : ContentPage
         await LoadAsync();
     }
 
-    async Task LoadAsync() => InvoiceList.ItemsSource = await _api.GetInvoicesAsync();
-
-    async void OnRefreshing(object sender, EventArgs e)
+    async Task LoadAsync()
     {
-        await LoadAsync();
-        RefreshHost.IsRefreshing = false;
+        try
+        {
+            InvoiceList.ItemsSource = await _api.GetInvoicesAsync();
+        }
+        finally
+        {
+            RefreshHost.IsRefreshing = false;
+        }
     }
+
+    async void OnRefreshing(object sender, EventArgs e) => await LoadAsync();
 }

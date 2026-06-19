@@ -32,27 +32,53 @@ public partial class GetStartedPage : ContentPage
 
         if (string.IsNullOrWhiteSpace(profile.Company) || string.IsNullOrWhiteSpace(profile.Email))
         {
-            StatusLabel.Text = "Company name and work email are required.";
-            StatusLabel.IsVisible = true;
+            ShowStatus("Company name and work email are required.");
             return;
         }
+
+        if (!Validation.IsValidEmail(profile.Email))
+        {
+            ShowStatus("Enter a valid work email address.");
+            return;
+        }
+
+        var button = sender as Button;
+        if (button is not null)
+            button.IsEnabled = false;
 
         try
         {
             await _api.SubmitLeadIntakeAsync(profile);
             _store.Save(profile);
+
+            var checkout = profile.Plan == "pilot"
+                ? _config.PilotCheckoutUrl
+                : string.IsNullOrWhiteSpace(_config.StartupCheckoutUrl) ? _config.WebsiteUrl + "/checkout" : _config.StartupCheckoutUrl;
+
+            await DisplayAlert("Workspace requested", "Your company profile is saved. Complete checkout to activate your plan.", "Continue");
+
+            try
+            {
+                if (Uri.TryCreate(checkout, UriKind.Absolute, out var checkoutUri))
+                    await Launcher.OpenAsync(checkoutUri);
+            }
+            catch (Exception)
+            {
+                // Opening the external browser is best-effort; never block workspace creation on it.
+            }
+
+            await Shell.Current.GoToAsync("//main/command");
         }
-        catch
+        finally
         {
-            _store.Save(profile);
+            if (button is not null)
+                button.IsEnabled = true;
         }
+    }
 
-        var checkout = profile.Plan == "pilot"
-            ? _config.PilotCheckoutUrl
-            : string.IsNullOrWhiteSpace(_config.StartupCheckoutUrl) ? _config.WebsiteUrl + "/checkout" : _config.StartupCheckoutUrl;
-
-        await DisplayAlert("Workspace requested", "Your company profile is saved. Complete checkout to activate your plan.", "Continue");
-        await Launcher.OpenAsync(new Uri(checkout));
-        await Shell.Current.GoToAsync("//main/command");
+    void ShowStatus(string message)
+    {
+        StatusLabel.Text = message;
+        StatusLabel.IsVisible = true;
     }
 }

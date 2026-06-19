@@ -22,21 +22,43 @@ public partial class SignInPage : ContentPage
         var password = PasswordEntry.Text ?? "";
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
         {
-            StatusLabel.Text = "Enter your work email and password.";
-            StatusLabel.IsVisible = true;
+            ShowStatus("Enter your work email and password.");
             return;
         }
 
-        var ok = await _api.SignInAsync(email, password);
-        if (!ok)
+        if (!Validation.IsValidEmail(email))
         {
-            StatusLabel.Text = "We could not verify those credentials. Check your email and password.";
-            StatusLabel.IsVisible = true;
+            ShowStatus("Enter a valid work email address.");
             return;
         }
 
-        _store.Save(new CustomerProfile { Email = email, Password = password });
-        await Shell.Current.GoToAsync("//main/command");
+        var button = sender as Button;
+        if (button is not null)
+            button.IsEnabled = false;
+
+        try
+        {
+            var ok = await _api.SignInAsync(email, password);
+            if (!ok)
+            {
+                ShowStatus("We could not verify those credentials. Check your email and password, then try again.");
+                return;
+            }
+
+            _store.Save(new CustomerProfile { Email = email });
+            await Shell.Current.GoToAsync("//main/command");
+        }
+        finally
+        {
+            if (button is not null)
+                button.IsEnabled = true;
+        }
+    }
+
+    void ShowStatus(string message)
+    {
+        StatusLabel.Text = message;
+        StatusLabel.IsVisible = true;
     }
 
     async void OnGetStartedClicked(object sender, EventArgs e) =>
