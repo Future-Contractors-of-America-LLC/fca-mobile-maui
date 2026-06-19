@@ -1,33 +1,42 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:vm="clr-namespace:Fca.Mobile.ViewModels"
              x:Class="Fca.Mobile.Pages.CustomerSuccessPage"
+             x:DataType="vm:CustomerSuccessViewModel"
              Title="Customer Success">
 
-    <Grid RowDefinitions="Auto,Auto,*">
+    <ContentPage.Behaviors>
+        <toolkit:EventToCommandBehavior EventName="Appearing" Command="{Binding InitializeCommand}" />
+    </ContentPage.Behaviors>
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
         <VerticalStackLayout Grid.Row="0" Padding="16" Spacing="8">
-            <Entry x:Name="SubjectEntry" Placeholder="Case subject" Style="{StaticResource Field}" />
-            <Picker x:Name="PriorityPicker" Title="Priority">
-                <Picker.Items>
-                    <x:String>standard</x:String>
-                    <x:String>urgent</x:String>
-                    <x:String>critical</x:String>
-                </Picker.Items>
-            </Picker>
-            <Editor x:Name="DetailEditor" Placeholder="Describe what you need from customer success" HeightRequest="100" />
-            <Button x:Name="CreateButton" Text="Open support case" Style="{StaticResource PrimaryButton}" Clicked="OnCreateClicked" />
+            <Entry Placeholder="Case subject" Style="{StaticResource Field}" Text="{Binding Subject}" />
+            <Picker Title="Priority" ItemsSource="{Binding Priorities}" SelectedItem="{Binding SelectedPriority}" />
+            <Editor Placeholder="Describe what you need from customer success"
+                    HeightRequest="100"
+                    Style="{StaticResource EditorField}"
+                    Text="{Binding Detail}" />
+            <Button Text="Open support case" Style="{StaticResource PrimaryButton}" Command="{Binding CreateCaseCommand}" />
         </VerticalStackLayout>
 
-        <Label Grid.Row="1"
-               x:Name="ErrorLabel"
+        <Border Grid.Row="1" Style="{StaticResource OfflineBanner}" IsVisible="{Binding IsOffline}">
+            <Label Text="No internet connection" TextColor="{StaticResource White}" HorizontalTextAlignment="Center" FontSize="13" />
+        </Border>
+
+        <Label Grid.Row="2"
                Style="{StaticResource ErrorLabel}"
                Padding="16,0,16,8"
-               IsVisible="False" />
+               IsVisible="{Binding HasError}"
+               Text="{Binding ErrorMessage}" />
 
-        <RefreshView Grid.Row="2" x:Name="RefreshHost" Refreshing="OnRefreshing">
-            <CollectionView x:Name="CaseList" SelectionMode="None">
+        <RefreshView Grid.Row="3" IsRefreshing="{Binding IsRefreshing}" Command="{Binding RefreshCommand}">
+            <CollectionView ItemsSource="{Binding Cases}" SelectionMode="None">
                 <CollectionView.ItemTemplate>
-                    <DataTemplate>
+                    <DataTemplate x:DataType="models:SupportTicket"
+                                  xmlns:models="clr-namespace:Fca.Mobile.Models;assembly=FcaMobile.Core">
                         <Border Style="{StaticResource Card}" Margin="16,8">
                             <VerticalStackLayout Spacing="4">
                                 <Label Text="{Binding Subject}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
@@ -43,10 +52,9 @@
             </CollectionView>
         </RefreshView>
 
-        <ActivityIndicator Grid.RowSpan="3"
-                           x:Name="LoadingIndicator"
-                           IsRunning="False"
-                           IsVisible="False"
+        <ActivityIndicator Grid.RowSpan="4"
+                           IsRunning="{Binding IsBusy}"
+                           IsVisible="{Binding IsBusy}"
                            Color="{StaticResource Blue}"
                            VerticalOptions="Center"
                            HorizontalOptions="Center" />

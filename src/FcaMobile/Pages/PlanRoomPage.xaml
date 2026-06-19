@@ -1,18 +1,23 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:vm="clr-namespace:Fca.Mobile.ViewModels"
              x:Class="Fca.Mobile.Pages.PlanRoomPage"
+             x:DataType="vm:PlanRoomViewModel"
              Title="Plan Room">
 
-    <Grid RowDefinitions="Auto,*">
-        <Label Grid.Row="0"
-               x:Name="ErrorLabel"
-               Style="{StaticResource ErrorLabel}"
-               Padding="16,8,16,0"
-               IsVisible="False" />
+    <ContentPage.Behaviors>
+        <toolkit:EventToCommandBehavior EventName="Appearing" Command="{Binding InitializeCommand}" />
+    </ContentPage.Behaviors>
 
-        <RefreshView Grid.Row="1" x:Name="RefreshHost" Refreshing="OnRefreshing">
-            <CollectionView x:Name="DocList" SelectionMode="None">
+    <Grid RowDefinitions="Auto,Auto,*">
+        <Border Grid.Row="0" Style="{StaticResource OfflineBanner}" IsVisible="{Binding IsOffline}">
+            <Label Text="No internet connection" TextColor="{StaticResource White}" HorizontalTextAlignment="Center" FontSize="13" />
+        </Border>
+        <Label Grid.Row="1" Style="{StaticResource ErrorLabel}" Padding="16,8,16,0" IsVisible="{Binding HasError}" Text="{Binding ErrorMessage}" />
+        <RefreshView Grid.Row="2" IsRefreshing="{Binding IsRefreshing}" Command="{Binding RefreshCommand}">
+            <CollectionView ItemsSource="{Binding Documents}" SelectionMode="None">
                 <CollectionView.EmptyView>
                     <VerticalStackLayout Padding="24" Spacing="8">
                         <Label Text="Plan room" Style="{StaticResource Headline}" FontSize="22" />
@@ -20,7 +25,8 @@
                     </VerticalStackLayout>
                 </CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
-                    <DataTemplate>
+                    <DataTemplate x:DataType="models:FileRecord"
+                                  xmlns:models="clr-namespace:Fca.Mobile.Models;assembly=FcaMobile.Core">
                         <Border Style="{StaticResource Card}" Margin="16,8">
                             <VerticalStackLayout Spacing="4">
                                 <Label Text="{Binding Name}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
@@ -32,14 +38,7 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
         </RefreshView>
-
-        <ActivityIndicator Grid.RowSpan="2"
-                           x:Name="LoadingIndicator"
-                           IsRunning="False"
-                           IsVisible="False"
-                           Color="{StaticResource Blue}"
-                           VerticalOptions="Center"
-                           HorizontalOptions="Center" />
+        <ActivityIndicator Grid.RowSpan="3" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="{StaticResource Blue}" VerticalOptions="Center" HorizontalOptions="Center" />
     </Grid>
 
 </ContentPage>

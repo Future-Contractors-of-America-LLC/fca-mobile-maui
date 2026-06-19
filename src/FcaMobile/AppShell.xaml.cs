@@ -6,9 +6,11 @@ namespace Fca.Mobile;
 public partial class AppShell : Shell
 {
     private readonly CustomerStore _store;
+    private readonly IBiometricAuthService _biometrics;
 
     public AppShell(
         CustomerStore store,
+        IBiometricAuthService biometrics,
         WelcomePage welcome,
         CommandCenterPage commandCenter,
         LeadPipelinePage leads,
@@ -17,6 +19,7 @@ public partial class AppShell : Shell
         AccountPage account)
     {
         _store = store;
+        _biometrics = biometrics;
         InitializeComponent();
 
         WelcomeShell.Content = welcome;
@@ -41,6 +44,17 @@ public partial class AppShell : Shell
     async void OnShellLoaded(object? sender, EventArgs e)
     {
         Loaded -= OnShellLoaded;
+
+        if (_store.IsSignedIn && _biometrics.IsEnabled)
+        {
+            var unlocked = await _biometrics.AuthenticateAsync("Unlock your FCA workspace.").ConfigureAwait(false);
+            if (!unlocked)
+            {
+                await GoToAsync("//welcome").ConfigureAwait(false);
+                return;
+            }
+        }
+
         var route = _store.IsSignedIn ? "//main/command" : "//welcome";
         await GoToAsync(route).ConfigureAwait(false);
     }

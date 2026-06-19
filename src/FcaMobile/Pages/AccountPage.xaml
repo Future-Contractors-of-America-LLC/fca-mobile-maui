@@ -1,23 +1,54 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:vm="clr-namespace:Fca.Mobile.ViewModels"
              x:Class="Fca.Mobile.Pages.AccountPage"
+             x:DataType="vm:AccountViewModel"
              Title="Account">
+
+    <ContentPage.Behaviors>
+        <toolkit:EventToCommandBehavior EventName="Appearing" Command="{Binding InitializeCommand}" />
+    </ContentPage.Behaviors>
 
     <ScrollView>
         <VerticalStackLayout Padding="24" Spacing="16">
             <Label Text="Your account" Style="{StaticResource Headline}" />
+
             <Border Style="{StaticResource Card}">
                 <VerticalStackLayout Spacing="6">
-                    <Label x:Name="CompanyLabel" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
-                    <Label x:Name="EmailLabel" Style="{StaticResource Subhead}" />
-                    <Label x:Name="PlanLabel" TextColor="{StaticResource Blue}" />
+                    <Label Text="{Binding Company}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
+                    <Label Text="{Binding Email}" Style="{StaticResource Subhead}" />
+                    <Label Text="{Binding Plan}" TextColor="{StaticResource Blue}" />
                 </VerticalStackLayout>
             </Border>
 
-            <Button Text="Manage billing on web" Style="{StaticResource SecondaryButton}" Clicked="OnBillingClicked" />
-            <Button Text="Sign out" Style="{StaticResource PrimaryButton}" BackgroundColor="{StaticResource Slate}" Clicked="OnSignOutClicked" />
-            <Button Text="Return to welcome" Style="{StaticResource SecondaryButton}" Clicked="OnWelcomeClicked" />
+            <Border Style="{StaticResource Card}" IsVisible="{Binding BiometricAvailable}">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <Label Text="{Binding BiometricLabel}"
+                           VerticalOptions="Center"
+                           TextColor="{StaticResource Navy}" />
+                    <Switch Grid.Column="1"
+                            IsToggled="{Binding BiometricUnlockEnabled, Mode=TwoWay}"
+                            SemanticProperties.Description="Toggle biometric unlock" />
+                </Grid>
+            </Border>
+
+            <Button Text="Manage billing on web"
+                    Style="{StaticResource SecondaryButton}"
+                    Command="{Binding OpenBillingCommand}" />
+            <Button Text="Sign out"
+                    Style="{StaticResource PrimaryButton}"
+                    BackgroundColor="{StaticResource Slate}"
+                    Command="{Binding SignOutCommand}" />
+            <Button Text="Return to welcome"
+                    Style="{StaticResource SecondaryButton}"
+                    Command="{Binding ReturnToWelcomeCommand}" />
+
+            <Label Text="{Binding AppVersion}"
+                   Style="{StaticResource Subhead}"
+                   HorizontalTextAlignment="Center"
+                   Margin="0,12,0,0" />
         </VerticalStackLayout>
     </ScrollView>
 

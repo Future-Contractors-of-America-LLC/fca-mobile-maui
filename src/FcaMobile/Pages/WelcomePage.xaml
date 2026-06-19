@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Fca.Mobile.ViewModels"
              x:Class="Fca.Mobile.Pages.WelcomePage"
+             x:DataType="vm:WelcomeViewModel"
              Title="Welcome">
 
     <ScrollView>
         <VerticalStackLayout Padding="24" Spacing="20">
-            <Label Text="FCA Contractor Command" Style="{StaticResource Headline}" />
+            <Label Text="FCA Contractor Command"
+                   Style="{StaticResource Headline}"
+                   SemanticProperties.HeadingLevel="Level1" />
             <Label Style="{StaticResource Subhead}"
                    Text="One mobile command center for leads, job sites, plan rooms, billing, and workforce training - built for commercial contractors competing at enterprise scale." />
 
@@ -31,9 +35,17 @@
                 </VerticalStackLayout>
             </Border>
 
-            <Button Text="View Plans &amp; Pricing" Style="{StaticResource PrimaryButton}" Clicked="OnPlansClicked" />
-            <Button Text="Sign In" Style="{StaticResource SecondaryButton}" Clicked="OnSignInClicked" />
-            <Button Text="Get Started" Style="{StaticResource PrimaryButton}" BackgroundColor="{StaticResource Gold}" Clicked="OnGetStartedClicked" />
+            <Button Text="View Plans &amp; Pricing"
+                    Style="{StaticResource PrimaryButton}"
+                    Command="{Binding ViewPlansCommand}"
+                    SemanticProperties.Hint="Opens plan and pricing details" />
+            <Button Text="Sign In"
+                    Style="{StaticResource SecondaryButton}"
+                    Command="{Binding SignInCommand}" />
+            <Button Text="Get Started"
+                    Style="{StaticResource PrimaryButton}"
+                    BackgroundColor="{StaticResource Gold}"
+                    Command="{Binding GetStartedCommand}" />
         </VerticalStackLayout>
     </ScrollView>
 

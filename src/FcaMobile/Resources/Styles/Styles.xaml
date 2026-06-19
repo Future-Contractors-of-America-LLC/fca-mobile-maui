@@ -1,9 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    xmlns:ios="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;assembly=Microsoft.Maui.Controls">
 
     <Style TargetType="ContentPage" ApplyToDerivedTypes="True">
-        <Setter Property="BackgroundColor" Value="{StaticResource Background}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Background}, Dark={StaticResource Background}}" />
+        <Setter Property="ios:Page.UseSafeArea" Value="True" />
+    </Style>
+
+    <Style TargetType="Shell" ApplyToDerivedTypes="True">
+        <Setter Property="Shell.BackgroundColor" Value="{AppThemeBinding Light={StaticResource Background}, Dark={StaticResource Background}}" />
+        <Setter Property="Shell.ForegroundColor" Value="{StaticResource Navy}" />
+        <Setter Property="Shell.TitleColor" Value="{StaticResource Navy}" />
+        <Setter Property="Shell.TabBarBackgroundColor" Value="{AppThemeBinding Light={StaticResource Card}, Dark={StaticResource Card}}" />
+        <Setter Property="Shell.TabBarForegroundColor" Value="{StaticResource Blue}" />
+        <Setter Property="Shell.TabBarUnselectedColor" Value="{StaticResource Muted}" />
     </Style>
 
     <Style x:Key="Headline" TargetType="Label">
@@ -36,6 +47,7 @@
         <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="CornerRadius" Value="10" />
         <Setter Property="Padding" Value="14,12" />
+        <Setter Property="MinimumHeightRequest" Value="48" />
     </Style>
 
     <Style x:Key="SecondaryButton" TargetType="Button">
@@ -45,6 +57,7 @@
         <Setter Property="BorderWidth" Value="1.5" />
         <Setter Property="CornerRadius" Value="10" />
         <Setter Property="Padding" Value="14,12" />
+        <Setter Property="MinimumHeightRequest" Value="48" />
     </Style>
 
     <Style x:Key="ErrorLabel" TargetType="Label">
@@ -53,8 +66,21 @@
         <Setter Property="LineBreakMode" Value="WordWrap" />
     </Style>
 
+    <Style x:Key="OfflineBanner" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{StaticResource WarningBanner}" />
+        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="StrokeThickness" Value="0" />
+    </Style>
+
     <Style x:Key="Field" TargetType="Entry">
-        <Setter Property="BackgroundColor" Value="{StaticResource White}" />
+        <Setter Property="BackgroundColor" Value="{StaticResource FieldBackground}" />
+        <Setter Property="TextColor" Value="{StaticResource Navy}" />
+        <Setter Property="PlaceholderColor" Value="{StaticResource Muted}" />
+        <Setter Property="MinimumHeightRequest" Value="48" />
+    </Style>
+
+    <Style x:Key="EditorField" TargetType="Editor">
+        <Setter Property="BackgroundColor" Value="{StaticResource FieldBackground}" />
         <Setter Property="TextColor" Value="{StaticResource Navy}" />
         <Setter Property="PlaceholderColor" Value="{StaticResource Muted}" />
     </Style>

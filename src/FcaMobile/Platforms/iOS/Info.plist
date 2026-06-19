@@ -21,7 +21,18 @@
     <string>UIInterfaceOrientationLandscapeLeft</string>
     <string>UIInterfaceOrientationLandscapeRight</string>
   </array>
+  <key>UISupportedInterfaceOrientations~ipad</key>
+  <array>
+    <string>UIInterfaceOrientationPortrait</string>
+    <string>UIInterfaceOrientationPortraitUpsideDown</string>
+    <string>UIInterfaceOrientationLandscapeLeft</string>
+    <string>UIInterfaceOrientationLandscapeRight</string>
+  </array>
   <key>CFBundleDisplayName</key>
   <string>FCA Contractor Command</string>
+  <key>NSFaceIDUsageDescription</key>
+  <string>Unlock your FCA Contractor Command workspace quickly and securely.</string>
+  <key>UIViewControllerBasedStatusBarAppearance</key>
+  <true/>
 </dict>
 </plist>

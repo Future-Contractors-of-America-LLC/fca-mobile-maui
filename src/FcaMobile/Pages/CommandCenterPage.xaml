@@ -1,63 +1,75 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:vm="clr-namespace:Fca.Mobile.ViewModels"
              x:Class="Fca.Mobile.Pages.CommandCenterPage"
+             x:DataType="vm:CommandCenterViewModel"
              Title="Command Center">
 
-    <Grid RowDefinitions="Auto,*">
-        <Label Grid.Row="0"
-               x:Name="ErrorLabel"
+    <ContentPage.Behaviors>
+        <toolkit:EventToCommandBehavior EventName="Appearing" Command="{Binding InitializeCommand}" />
+    </ContentPage.Behaviors>
+
+    <Grid RowDefinitions="Auto,Auto,*">
+        <Border Grid.Row="0" Style="{StaticResource OfflineBanner}" IsVisible="{Binding IsOffline}">
+            <Label Text="No internet connection" TextColor="{StaticResource White}" HorizontalTextAlignment="Center" FontSize="13" />
+        </Border>
+
+        <Label Grid.Row="1"
                Style="{StaticResource ErrorLabel}"
                Padding="16,8,16,0"
-               IsVisible="False" />
+               IsVisible="{Binding HasError}"
+               Text="{Binding ErrorMessage}" />
 
-        <RefreshView Grid.Row="1" x:Name="RefreshHost" Refreshing="OnRefreshing">
+        <RefreshView Grid.Row="2"
+                     IsRefreshing="{Binding IsRefreshing}"
+                     Command="{Binding RefreshCommand}">
             <ScrollView>
                 <VerticalStackLayout Padding="20" Spacing="16">
-                <Label x:Name="GreetingLabel" Style="{StaticResource Headline}" />
-                <Label Text="Your daily contractor operating picture - leads, jobs, documents, billing, and crew readiness in one place."
-                       Style="{StaticResource Subhead}" />
+                    <Label Text="{Binding Greeting}" Style="{StaticResource Headline}" />
+                    <Label Text="Your daily contractor operating picture - leads, jobs, documents, billing, and crew readiness in one place."
+                           Style="{StaticResource Subhead}" />
 
-                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="12">
-                    <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource Card}">
-                        <VerticalStackLayout>
-                            <Label Text="Open leads" Style="{StaticResource Subhead}" />
-                            <Label x:Name="LeadCountLabel" FontSize="32" FontAttributes="Bold" TextColor="{StaticResource Blue}" />
-                        </VerticalStackLayout>
-                    </Border>
-                    <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource Card}">
-                        <VerticalStackLayout>
-                            <Label Text="Active jobs" Style="{StaticResource Subhead}" />
-                            <Label x:Name="JobCountLabel" FontSize="32" FontAttributes="Bold" TextColor="{StaticResource Blue}" />
-                        </VerticalStackLayout>
-                    </Border>
-                    <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource Card}">
-                        <VerticalStackLayout>
-                            <Label Text="Plan sheets" Style="{StaticResource Subhead}" />
-                            <Label x:Name="DocCountLabel" FontSize="32" FontAttributes="Bold" TextColor="{StaticResource Blue}" />
-                        </VerticalStackLayout>
-                    </Border>
-                    <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource Card}">
-                        <VerticalStackLayout>
-                            <Label Text="Training programs" Style="{StaticResource Subhead}" />
-                            <Label x:Name="TrainingCountLabel" FontSize="32" FontAttributes="Bold" TextColor="{StaticResource Blue}" />
-                        </VerticalStackLayout>
-                    </Border>
-                </Grid>
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="12">
+                        <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource Card}">
+                            <VerticalStackLayout>
+                                <Label Text="Open leads" Style="{StaticResource Subhead}" />
+                                <Label Text="{Binding LeadCount}" FontSize="32" FontAttributes="Bold" TextColor="{StaticResource Blue}" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource Card}">
+                            <VerticalStackLayout>
+                                <Label Text="Active jobs" Style="{StaticResource Subhead}" />
+                                <Label Text="{Binding JobCount}" FontSize="32" FontAttributes="Bold" TextColor="{StaticResource Blue}" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource Card}">
+                            <VerticalStackLayout>
+                                <Label Text="Plan sheets" Style="{StaticResource Subhead}" />
+                                <Label Text="{Binding DocCount}" FontSize="32" FontAttributes="Bold" TextColor="{StaticResource Blue}" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource Card}">
+                            <VerticalStackLayout>
+                                <Label Text="Training programs" Style="{StaticResource Subhead}" />
+                                <Label Text="{Binding TrainingCount}" FontSize="32" FontAttributes="Bold" TextColor="{StaticResource Blue}" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
 
-                <Button Text="Lead pipeline" Style="{StaticResource PrimaryButton}" Clicked="OnLeadsClicked" />
-                <Button Text="Plan room" Style="{StaticResource SecondaryButton}" Clicked="OnPlanRoomClicked" />
-                <Button Text="Billing &amp; invoices" Style="{StaticResource SecondaryButton}" Clicked="OnInvoicesClicked" />
-                <Button Text="Customer communications" Style="{StaticResource SecondaryButton}" Clicked="OnCommsClicked" />
-                <Button Text="Customer success" Style="{StaticResource SecondaryButton}" Clicked="OnSupportClicked" />
+                    <Button Text="Lead pipeline" Style="{StaticResource PrimaryButton}" Command="{Binding OpenLeadsCommand}" />
+                    <Button Text="Plan room" Style="{StaticResource SecondaryButton}" Command="{Binding OpenPlanRoomCommand}" />
+                    <Button Text="Billing &amp; invoices" Style="{StaticResource SecondaryButton}" Command="{Binding OpenInvoicesCommand}" />
+                    <Button Text="Customer communications" Style="{StaticResource SecondaryButton}" Command="{Binding OpenCommunicationsCommand}" />
+                    <Button Text="Customer success" Style="{StaticResource SecondaryButton}" Command="{Binding OpenSupportCommand}" />
                 </VerticalStackLayout>
             </ScrollView>
         </RefreshView>
 
-        <ActivityIndicator Grid.RowSpan="2"
-                           x:Name="LoadingIndicator"
-                           IsRunning="False"
-                           IsVisible="False"
+        <ActivityIndicator Grid.RowSpan="3"
+                           IsRunning="{Binding IsBusy}"
+                           IsVisible="{Binding IsBusy}"
                            Color="{StaticResource Blue}"
                            VerticalOptions="Center"
                            HorizontalOptions="Center" />

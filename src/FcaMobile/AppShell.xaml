@@ -8,11 +8,11 @@
     <ShellContent x:Name="WelcomeShell" Route="welcome" />
 
     <TabBar x:Name="MainTabs" Route="main">
-        <ShellContent x:Name="CommandShell" Title="Command Center" Route="command" />
-        <ShellContent x:Name="LeadsShell" Title="Leads" Route="leads" />
-        <ShellContent x:Name="JobsShell" Title="Jobs" Route="jobs" />
-        <ShellContent x:Name="TrainingShell" Title="Training" Route="training" />
-        <ShellContent x:Name="AccountShell" Title="Account" Route="account" />
+        <ShellContent x:Name="CommandShell" Title="Command" Icon="tab_command.svg" Route="command" />
+        <ShellContent x:Name="LeadsShell" Title="Leads" Icon="tab_leads.svg" Route="leads" />
+        <ShellContent x:Name="JobsShell" Title="Jobs" Icon="tab_jobs.svg" Route="jobs" />
+        <ShellContent x:Name="TrainingShell" Title="Training" Icon="tab_training.svg" Route="training" />
+        <ShellContent x:Name="AccountShell" Title="Account" Icon="tab_account.svg" Route="account" />
     </TabBar>
 
 </Shell>
