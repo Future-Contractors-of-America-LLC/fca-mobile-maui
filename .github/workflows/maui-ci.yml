@@ -1,4 +1,4 @@
-name: MAUI Build
+name: MAUI Build & Test
 
 on:
   push:
@@ -7,16 +7,65 @@ on:
     branches: [main]
   workflow_dispatch:
 
+env:
+  DOTNET_VERSION: "8.0.422"
+
 jobs:
-  android:
-    runs-on: windows-latest
+  # ── Unit tests (runs on linux, fast, no device needed) ───────────────────
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.422
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore test project
+        run: dotnet restore tests/FcaMobile.Tests/FcaMobile.Tests.csproj
+
+      - name: Run unit tests
+        run: dotnet test tests/FcaMobile.Tests/FcaMobile.Tests.csproj --no-restore --logger "console;verbosity=normal" --results-directory ./test-results
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ./test-results
+
+  # ── Format check ─────────────────────────────────────────────────────────
+  format:
+    name: Format check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore FcaMobile.sln
+
+      - name: Verify formatting
+        run: dotnet format FcaMobile.sln --verify-no-changes --severity warn
+
+  # ── Android build ────────────────────────────────────────────────────────
+  android:
+    name: Android build
+    runs-on: windows-latest
+    needs: [test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -33,18 +82,26 @@ jobs:
       - name: Restore
         run: dotnet restore FcaMobile.sln
 
-      - name: Build Android
-        run: dotnet build src/FcaMobile/FcaMobile.csproj -c Release -f net8.0-android --no-restore
+      - name: Build Android (Release)
+        run: >
+          dotnet build src/FcaMobile/FcaMobile.csproj
+          -c Release
+          -f net8.0-android
+          --no-restore
+          -p:CI=true
 
+  # ── iOS build ─────────────────────────────────────────────────────────────
   ios:
+    name: iOS build
     runs-on: macos-latest
+    needs: [test]
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.422
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Install MAUI workload
         run: dotnet workload install maui
@@ -52,5 +109,10 @@ jobs:
       - name: Restore
         run: dotnet restore FcaMobile.sln
 
-      - name: Build iOS
-        run: dotnet build src/FcaMobile/FcaMobile.csproj -c Release -f net8.0-ios --no-restore
+      - name: Build iOS (Release)
+        run: >
+          dotnet build src/FcaMobile/FcaMobile.csproj
+          -c Release
+          -f net8.0-ios
+          --no-restore
+          -p:CI=true
