@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Fca.Mobile.Models;
 
 public sealed class CustomerProfile
@@ -6,6 +8,11 @@ public sealed class CustomerProfile
     public string Company { get; set; } = "";
     public string Name { get; set; } = "";
     public string Email { get; set; } = "";
+
+    /// <summary>
+    /// Transient only — never serialized. Credentials are persisted via SecureStorage.
+    /// </summary>
+    [JsonIgnore]
     public string Password { get; set; } = "";
 }
 
