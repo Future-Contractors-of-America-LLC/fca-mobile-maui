@@ -49,8 +49,19 @@ public partial class AppShell : Shell
 
     public void RestoreSession()
     {
-        if (_store.IsSignedIn)
-            Dispatcher.Dispatch(async () => await GoToAsync("//main/command"));
+        Dispatcher.Dispatch(async () =>
+        {
+            try
+            {
+                if (await _store.CanRestoreSessionAsync())
+                    await GoToAsync("//main/command");
+            }
+            catch (Exception)
+            {
+                _store.Clear();
+                await GoToAsync("//welcome");
+            }
+        });
     }
 
     private static bool IsProtectedRoute(string location)

@@ -25,7 +25,7 @@ public sealed class FcaApiClient
 
     public async Task<SignInResult> SignInAsync(string email, string password, CancellationToken ct = default)
     {
-        var response = await _http.PostAsJsonAsync("customer-login", new { email, password }, ct);
+        using var response = await _http.PostAsJsonAsync("customer-login", new { email, password }, ct);
         if (!response.IsSuccessStatusCode)
             return new SignInResult(false);
 
@@ -105,7 +105,7 @@ public sealed class FcaApiClient
             "startup" => 99,
             _ => 249,
         };
-        await _http.PostAsJsonAsync("bids", new
+        using var response = await _http.PostAsJsonAsync("bids", new
         {
             company = profile.Company,
             projectName = $"{profile.Company} - {profile.Plan}",
@@ -139,7 +139,7 @@ public sealed class FcaApiClient
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
         await AddAuthHeaderAsync(request);
 
-        var response = await _http.SendAsync(request, ct);
+        using var response = await _http.SendAsync(request, ct);
         if (!response.IsSuccessStatusCode)
             return null;
         return await response.Content.ReadAsStringAsync(ct);
@@ -153,7 +153,7 @@ public sealed class FcaApiClient
         };
         await AddAuthHeaderAsync(request);
 
-        var response = await _http.SendAsync(request, ct);
+        using var response = await _http.SendAsync(request, ct);
         response.EnsureSuccessStatusCode();
     }
 
