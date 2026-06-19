@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Fca.Mobile.Pages.LeadPipelinePage"
+             Title="Lead Pipeline">
+
+    <RefreshView x:Name="RefreshHost" Refreshing="OnRefreshing">
+        <CollectionView x:Name="LeadList" SelectionMode="None">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout Padding="24" Spacing="8">
+                    <Label Text="No leads yet" Style="{StaticResource Headline}" FontSize="22" />
+                    <Label Text="New opportunities from your website, referrals, and field teams will appear here." Style="{StaticResource Subhead}" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border Style="{StaticResource Card}" Margin="16,8">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="{Binding ProjectName}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
+                            <Label Text="{Binding Company}" Style="{StaticResource Subhead}" />
+                            <HorizontalStackLayout Spacing="12">
+                                <Label Text="{Binding Status}" TextColor="{StaticResource Blue}" />
+                                <Label Text="{Binding Value, StringFormat='${0:N0}'}" TextColor="{StaticResource Muted}" />
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </RefreshView>
+
+</ContentPage>

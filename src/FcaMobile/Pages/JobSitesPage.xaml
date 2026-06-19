@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Fca.Mobile.Pages.JobSitesPage"
+             Title="Job Sites">
+
+    <RefreshView x:Name="RefreshHost" Refreshing="OnRefreshing">
+        <CollectionView x:Name="JobList" SelectionMode="None">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout Padding="24" Spacing="8">
+                    <Label Text="No active jobs" Style="{StaticResource Headline}" FontSize="22" />
+                    <Label Text="Awarded projects and field milestones will show here as your pipeline converts." Style="{StaticResource Subhead}" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border Style="{StaticResource Card}" Margin="16,8">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="{Binding Name}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
+                            <Label Text="{Binding Stage}" TextColor="{StaticResource Blue}" />
+                            <Label Text="{Binding NextStep}" Style="{StaticResource Subhead}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </RefreshView>
+
+</ContentPage>

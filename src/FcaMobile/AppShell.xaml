@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       x:Class="Fca.Mobile.AppShell"
+       Shell.FlyoutBehavior="Disabled"
+       Title="FCA Contractor Command">
+
+    <ShellContent x:Name="WelcomeShell" Route="welcome" />
+
+    <TabBar x:Name="MainTabs" Route="main">
+        <ShellContent x:Name="CommandShell" Title="Command Center" Route="command" />
+        <ShellContent x:Name="LeadsShell" Title="Leads" Route="leads" />
+        <ShellContent x:Name="JobsShell" Title="Jobs" Route="jobs" />
+        <ShellContent x:Name="TrainingShell" Title="Training" Route="training" />
+        <ShellContent x:Name="AccountShell" Title="Account" Route="account" />
+    </TabBar>
+
+</Shell>

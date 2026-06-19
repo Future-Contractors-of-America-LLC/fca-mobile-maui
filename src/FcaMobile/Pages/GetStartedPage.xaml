@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Fca.Mobile.Pages.GetStartedPage"
+             Title="Get Started">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16">
+            <Label Text="Start your contractor workspace" Style="{StaticResource Headline}" />
+            <Label Text="Tell us about your company. We will stand up your lead pipeline, job controls, and customer portal." Style="{StaticResource Subhead}" />
+
+            <Picker x:Name="PlanPicker" Title="Select plan">
+                <Picker.Items>
+                    <x:String>startup</x:String>
+                    <x:String>pilot</x:String>
+                    <x:String>enterprise</x:String>
+                </Picker.Items>
+            </Picker>
+            <Entry x:Name="CompanyEntry" Placeholder="Company name" Style="{StaticResource Field}" />
+            <Entry x:Name="NameEntry" Placeholder="Your name" Style="{StaticResource Field}" />
+            <Entry x:Name="EmailEntry" Placeholder="Work email" Keyboard="Email" Style="{StaticResource Field}" />
+            <Entry x:Name="PasswordEntry" Placeholder="Create password" IsPassword="True" Style="{StaticResource Field}" />
+
+            <Label x:Name="StatusLabel" TextColor="#DC2626" IsVisible="False" />
+
+            <Button Text="Create Workspace" Style="{StaticResource PrimaryButton}" Clicked="OnSubmitClicked" />
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

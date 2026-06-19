@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Fca.Mobile.Pages.CommunicationsPage"
+             Title="Communications">
+
+    <Grid RowDefinitions="Auto,*" Padding="0">
+        <VerticalStackLayout Grid.Row="0" Padding="16" Spacing="8">
+            <Entry x:Name="SubjectEntry" Placeholder="Subject" Style="{StaticResource Field}" />
+            <Editor x:Name="MessageEditor" Placeholder="Message for your FCA success team" HeightRequest="100" />
+            <Picker x:Name="ChannelPicker" Title="Channel">
+                <Picker.Items>
+                    <x:String>email</x:String>
+                    <x:String>sms</x:String>
+                    <x:String>portal</x:String>
+                </Picker.Items>
+            </Picker>
+            <Button Text="Send message" Style="{StaticResource PrimaryButton}" Clicked="OnSendClicked" />
+        </VerticalStackLayout>
+
+        <RefreshView Grid.Row="1" x:Name="RefreshHost" Refreshing="OnRefreshing">
+            <CollectionView x:Name="MessageList" SelectionMode="None">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource Card}" Margin="16,8">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="{Binding Subject}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
+                                <Label Text="{Binding Message}" Style="{StaticResource Subhead}" />
+                                <Label Text="{Binding Channel}" TextColor="{StaticResource Blue}" FontSize="12" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
+
+</ContentPage>

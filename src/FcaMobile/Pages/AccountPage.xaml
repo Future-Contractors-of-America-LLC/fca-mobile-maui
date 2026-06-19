@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Fca.Mobile.Pages.AccountPage"
+             Title="Account">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16">
+            <Label Text="Your account" Style="{StaticResource Headline}" />
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="6">
+                    <Label x:Name="CompanyLabel" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
+                    <Label x:Name="EmailLabel" Style="{StaticResource Subhead}" />
+                    <Label x:Name="PlanLabel" TextColor="{StaticResource Blue}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Button Text="Manage billing on web" Style="{StaticResource SecondaryButton}" Clicked="OnBillingClicked" />
+            <Button Text="Sign out" Style="{StaticResource PrimaryButton}" BackgroundColor="{StaticResource Slate}" Clicked="OnSignOutClicked" />
+            <Button Text="Return to welcome" Style="{StaticResource SecondaryButton}" Clicked="OnWelcomeClicked" />
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

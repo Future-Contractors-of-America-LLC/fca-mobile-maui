@@ -1,0 +1,23 @@
+# Build outputs
+**/bin/
+**/obj/
+**/.vs/
+
+# IDE
+.idea/
+*.user
+*.suo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# MAUI / mobile
+*.apk
+*.aab
+*.ipa
+*.dSYM.zip
+
+# Secrets
+*.pfx
+appsettings.*.local.json

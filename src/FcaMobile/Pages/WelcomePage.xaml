@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Fca.Mobile.Pages.WelcomePage"
+             Title="Welcome">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="20">
+            <Label Text="FCA Contractor Command" Style="{StaticResource Headline}" />
+            <Label Style="{StaticResource Subhead}"
+                   Text="One mobile command center for leads, job sites, plan rooms, billing, and workforce training — built for commercial contractors competing at enterprise scale." />
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="PlanHub-class lead pipeline" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
+                    <Label Text="Capture opportunities, qualify bids, and move work from first contact to signed contract." Style="{StaticResource Subhead}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Procore-class job control" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
+                    <Label Text="Track active projects, field updates, RFIs, and next actions from every job site." Style="{StaticResource Subhead}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Academy workforce readiness" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
+                    <Label Text="Assign credentials, safety modules, and trade certifications your crews need on site." Style="{StaticResource Subhead}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Button Text="View Plans &amp; Pricing" Style="{StaticResource PrimaryButton}" Clicked="OnPlansClicked" />
+            <Button Text="Sign In" Style="{StaticResource SecondaryButton}" Clicked="OnSignInClicked" />
+            <Button Text="Get Started" Style="{StaticResource PrimaryButton}" BackgroundColor="{StaticResource Gold}" Clicked="OnGetStartedClicked" />
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
