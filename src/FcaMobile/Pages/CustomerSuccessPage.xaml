@@ -18,24 +18,41 @@
             <Button Text="Open support case" Style="{StaticResource PrimaryButton}" Clicked="OnCreateClicked" />
         </VerticalStackLayout>
 
-        <RefreshView Grid.Row="1" x:Name="RefreshHost" Refreshing="OnRefreshing">
-            <CollectionView x:Name="CaseList" SelectionMode="None">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Border Style="{StaticResource Card}" Margin="16,8">
-                            <VerticalStackLayout Spacing="4">
-                                <Label Text="{Binding Subject}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
-                                <HorizontalStackLayout Spacing="12">
-                                    <Label Text="{Binding Priority}" TextColor="{StaticResource Blue}" />
-                                    <Label Text="{Binding Status}" Style="{StaticResource Subhead}" />
-                                </HorizontalStackLayout>
-                                <Label Text="{Binding Detail}" Style="{StaticResource Subhead}" />
-                            </VerticalStackLayout>
-                        </Border>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-        </RefreshView>
+        <Grid Grid.Row="1">
+            <RefreshView x:Name="RefreshHost" Refreshing="OnRefreshing">
+                <CollectionView x:Name="CaseList" SelectionMode="None">
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout Padding="24" Spacing="8">
+                            <Label Text="No support cases" Style="{StaticResource Headline}" FontSize="20" />
+                            <Label Text="Cases you open with customer success will be tracked here." Style="{StaticResource Subhead}" />
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource Card}" Margin="16,8">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="{Binding Subject}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
+                                    <HorizontalStackLayout Spacing="12">
+                                        <Label Text="{Binding Priority}" TextColor="{StaticResource Blue}" />
+                                        <Label Text="{Binding Status}" Style="{StaticResource Subhead}" />
+                                    </HorizontalStackLayout>
+                                    <Label Text="{Binding Detail}" Style="{StaticResource Subhead}" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </RefreshView>
+
+            <ActivityIndicator x:Name="Busy" IsVisible="False" IsRunning="False"
+                               Color="{StaticResource Blue}" VerticalOptions="Center" HorizontalOptions="Center" />
+
+            <VerticalStackLayout x:Name="ErrorView" IsVisible="False" Padding="24" Spacing="12" VerticalOptions="Center">
+                <Label Text="We couldn't load your cases" Style="{StaticResource Headline}" FontSize="20" HorizontalTextAlignment="Center" />
+                <Label Text="Check your connection and try again." Style="{StaticResource Subhead}" HorizontalTextAlignment="Center" />
+                <Button Text="Try again" Style="{StaticResource PrimaryButton}" Clicked="OnRetryClicked" />
+            </VerticalStackLayout>
+        </Grid>
     </Grid>
 
 </ContentPage>

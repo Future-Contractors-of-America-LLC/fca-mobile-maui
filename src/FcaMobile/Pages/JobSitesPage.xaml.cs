@@ -15,14 +15,34 @@ public partial class JobSitesPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        await LoadAsync();
+        await LoadAsync(showSpinner: true);
     }
 
-    async Task LoadAsync() => JobList.ItemsSource = await _api.GetJobsAsync();
+    async Task LoadAsync(bool showSpinner)
+    {
+        ErrorView.IsVisible = false;
+        if (showSpinner)
+            Busy.IsVisible = Busy.IsRunning = true;
+
+        try
+        {
+            JobList.ItemsSource = await _api.GetJobsAsync();
+        }
+        catch (Exception)
+        {
+            ErrorView.IsVisible = true;
+        }
+        finally
+        {
+            Busy.IsVisible = Busy.IsRunning = false;
+        }
+    }
 
     async void OnRefreshing(object sender, EventArgs e)
     {
-        await LoadAsync();
+        await LoadAsync(showSpinner: false);
         RefreshHost.IsRefreshing = false;
     }
+
+    async void OnRetryClicked(object sender, EventArgs e) => await LoadAsync(showSpinner: true);
 }

@@ -37,22 +37,46 @@ public partial class GetStartedPage : ContentPage
             return;
         }
 
+        var button = sender as Button;
+        if (button is not null)
+            button.IsEnabled = false;
+
         try
         {
-            await _api.SubmitLeadIntakeAsync(profile);
+            try
+            {
+                await _api.SubmitLeadIntakeAsync(profile);
+            }
+            catch (Exception)
+            {
+                // Intake submission is best-effort; we still save the profile
+                // locally so the customer can continue to checkout.
+            }
+
             _store.Save(profile);
+
+            var checkout = profile.Plan == "pilot"
+                ? _config.PilotCheckoutUrl
+                : string.IsNullOrWhiteSpace(_config.StartupCheckoutUrl) ? _config.WebsiteUrl + "/checkout" : _config.StartupCheckoutUrl;
+
+            await DisplayAlert("Workspace requested", "Your company profile is saved. Complete checkout to activate your plan.", "Continue");
+
+            try
+            {
+                if (Uri.TryCreate(checkout, UriKind.Absolute, out var checkoutUri))
+                    await Launcher.OpenAsync(checkoutUri);
+            }
+            catch (Exception)
+            {
+                // A missing browser shouldn't block entry into the workspace.
+            }
+
+            await Shell.Current.GoToAsync("//main/command");
         }
-        catch
+        finally
         {
-            _store.Save(profile);
+            if (button is not null)
+                button.IsEnabled = true;
         }
-
-        var checkout = profile.Plan == "pilot"
-            ? _config.PilotCheckoutUrl
-            : string.IsNullOrWhiteSpace(_config.StartupCheckoutUrl) ? _config.WebsiteUrl + "/checkout" : _config.StartupCheckoutUrl;
-
-        await DisplayAlert("Workspace requested", "Your company profile is saved. Complete checkout to activate your plan.", "Continue");
-        await Launcher.OpenAsync(new Uri(checkout));
-        await Shell.Current.GoToAsync("//main/command");
     }
 }

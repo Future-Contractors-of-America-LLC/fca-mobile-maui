@@ -4,28 +4,39 @@
              x:Class="Fca.Mobile.Pages.InvoicesPage"
              Title="Billing">
 
-    <RefreshView x:Name="RefreshHost" Refreshing="OnRefreshing">
-        <CollectionView x:Name="InvoiceList" SelectionMode="None">
-            <CollectionView.EmptyView>
-                <VerticalStackLayout Padding="24" Spacing="8">
-                    <Label Text="Billing summary" Style="{StaticResource Headline}" FontSize="22" />
-                    <Label Text="Invoices and payment status from your customer portal will display here." Style="{StaticResource Subhead}" />
-                </VerticalStackLayout>
-            </CollectionView.EmptyView>
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Border Style="{StaticResource Card}" Margin="16,8">
-                        <VerticalStackLayout Spacing="4">
-                            <Label Text="{Binding InvoiceName}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
-                            <HorizontalStackLayout Spacing="12">
-                                <Label Text="{Binding Amount}" TextColor="{StaticResource Blue}" />
-                                <Label Text="{Binding Status}" Style="{StaticResource Subhead}" />
-                            </HorizontalStackLayout>
-                        </VerticalStackLayout>
-                    </Border>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
-    </RefreshView>
+    <Grid>
+        <RefreshView x:Name="RefreshHost" Refreshing="OnRefreshing">
+            <CollectionView x:Name="InvoiceList" SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Padding="24" Spacing="8">
+                        <Label Text="Billing summary" Style="{StaticResource Headline}" FontSize="22" />
+                        <Label Text="Invoices and payment status from your customer portal will display here." Style="{StaticResource Subhead}" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource Card}" Margin="16,8">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="{Binding InvoiceName}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
+                                <HorizontalStackLayout Spacing="12">
+                                    <Label Text="{Binding Amount}" TextColor="{StaticResource Blue}" />
+                                    <Label Text="{Binding Status}" Style="{StaticResource Subhead}" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+
+        <ActivityIndicator x:Name="Busy" IsVisible="False" IsRunning="False"
+                           Color="{StaticResource Blue}" VerticalOptions="Center" HorizontalOptions="Center" />
+
+        <VerticalStackLayout x:Name="ErrorView" IsVisible="False" Padding="24" Spacing="12" VerticalOptions="Center">
+            <Label Text="We couldn't load billing" Style="{StaticResource Headline}" FontSize="20" HorizontalTextAlignment="Center" />
+            <Label Text="Check your connection and try again." Style="{StaticResource Subhead}" HorizontalTextAlignment="Center" />
+            <Button Text="Try again" Style="{StaticResource PrimaryButton}" Clicked="OnRetryClicked" />
+        </VerticalStackLayout>
+    </Grid>
 
 </ContentPage>

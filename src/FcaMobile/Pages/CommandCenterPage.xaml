@@ -5,6 +5,7 @@
              Title="Command Center">
 
     <RefreshView x:Name="RefreshHost" Refreshing="OnRefreshing">
+        <Grid>
         <ScrollView>
             <VerticalStackLayout Padding="20" Spacing="16">
                 <Label x:Name="GreetingLabel" Style="{StaticResource Headline}" />
@@ -45,6 +46,10 @@
                 <Button Text="Customer success" Style="{StaticResource SecondaryButton}" Clicked="OnSupportClicked" />
             </VerticalStackLayout>
         </ScrollView>
+
+        <ActivityIndicator x:Name="Busy" IsVisible="False" IsRunning="False"
+                           Color="{StaticResource Blue}" VerticalOptions="Start" HorizontalOptions="Center" Margin="0,12,0,0" />
+        </Grid>
     </RefreshView>
 
 </ContentPage>

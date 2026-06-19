@@ -27,18 +27,43 @@ public partial class SignInPage : ContentPage
             return;
         }
 
-        var ok = await _api.SignInAsync(email, password);
-        if (!ok)
-        {
-            StatusLabel.Text = "We could not verify those credentials. Check your email and password.";
-            StatusLabel.IsVisible = true;
-            return;
-        }
+        var button = sender as Button;
+        if (button is not null)
+            button.IsEnabled = false;
 
-        _store.Save(new CustomerProfile { Email = email, Password = password });
-        await Shell.Current.GoToAsync("//main/command");
+        try
+        {
+            var ok = await _api.SignInAsync(email, password);
+            if (!ok)
+            {
+                StatusLabel.Text = "We could not verify those credentials. Check your email and password.";
+                StatusLabel.IsVisible = true;
+                return;
+            }
+
+            _store.Save(new CustomerProfile { Email = email, Password = password });
+            await Shell.Current.GoToAsync("//main/command");
+        }
+        catch (Exception)
+        {
+            StatusLabel.Text = "We couldn't reach the server. Check your connection and try again.";
+            StatusLabel.IsVisible = true;
+        }
+        finally
+        {
+            if (button is not null)
+                button.IsEnabled = true;
+        }
     }
 
-    async void OnGetStartedClicked(object sender, EventArgs e) =>
-        await Shell.Current.GoToAsync("getstarted");
+    async void OnGetStartedClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            await Shell.Current.GoToAsync("getstarted");
+        }
+        catch (Exception)
+        {
+        }
+    }
 }

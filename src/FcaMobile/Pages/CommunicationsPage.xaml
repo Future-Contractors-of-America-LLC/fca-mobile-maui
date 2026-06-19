@@ -18,21 +18,38 @@
             <Button Text="Send message" Style="{StaticResource PrimaryButton}" Clicked="OnSendClicked" />
         </VerticalStackLayout>
 
-        <RefreshView Grid.Row="1" x:Name="RefreshHost" Refreshing="OnRefreshing">
-            <CollectionView x:Name="MessageList" SelectionMode="None">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Border Style="{StaticResource Card}" Margin="16,8">
-                            <VerticalStackLayout Spacing="4">
-                                <Label Text="{Binding Subject}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
-                                <Label Text="{Binding Message}" Style="{StaticResource Subhead}" />
-                                <Label Text="{Binding Channel}" TextColor="{StaticResource Blue}" FontSize="12" />
-                            </VerticalStackLayout>
-                        </Border>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-        </RefreshView>
+        <Grid Grid.Row="1">
+            <RefreshView x:Name="RefreshHost" Refreshing="OnRefreshing">
+                <CollectionView x:Name="MessageList" SelectionMode="None">
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout Padding="24" Spacing="8">
+                            <Label Text="No messages yet" Style="{StaticResource Headline}" FontSize="20" />
+                            <Label Text="Messages you send to your FCA success team will appear here." Style="{StaticResource Subhead}" />
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource Card}" Margin="16,8">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="{Binding Subject}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
+                                    <Label Text="{Binding Message}" Style="{StaticResource Subhead}" />
+                                    <Label Text="{Binding Channel}" TextColor="{StaticResource Blue}" FontSize="12" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </RefreshView>
+
+            <ActivityIndicator x:Name="Busy" IsVisible="False" IsRunning="False"
+                               Color="{StaticResource Blue}" VerticalOptions="Center" HorizontalOptions="Center" />
+
+            <VerticalStackLayout x:Name="ErrorView" IsVisible="False" Padding="24" Spacing="12" VerticalOptions="Center">
+                <Label Text="We couldn't load messages" Style="{StaticResource Headline}" FontSize="20" HorizontalTextAlignment="Center" />
+                <Label Text="Check your connection and try again." Style="{StaticResource Subhead}" HorizontalTextAlignment="Center" />
+                <Button Text="Try again" Style="{StaticResource PrimaryButton}" Clicked="OnRetryClicked" />
+            </VerticalStackLayout>
+        </Grid>
     </Grid>
 
 </ContentPage>

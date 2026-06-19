@@ -4,26 +4,37 @@
              x:Class="Fca.Mobile.Pages.PlanRoomPage"
              Title="Plan Room">
 
-    <RefreshView x:Name="RefreshHost" Refreshing="OnRefreshing">
-        <CollectionView x:Name="DocList" SelectionMode="None">
-            <CollectionView.EmptyView>
-                <VerticalStackLayout Padding="24" Spacing="8">
-                    <Label Text="Plan room" Style="{StaticResource Headline}" FontSize="22" />
-                    <Label Text="Drawings, specs, and submittals shared with your team will be listed here." Style="{StaticResource Subhead}" />
-                </VerticalStackLayout>
-            </CollectionView.EmptyView>
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Border Style="{StaticResource Card}" Margin="16,8">
-                        <VerticalStackLayout Spacing="4">
-                            <Label Text="{Binding Name}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
-                            <Label Text="{Binding Category}" TextColor="{StaticResource Blue}" />
-                            <Label Text="{Binding Status}" Style="{StaticResource Subhead}" />
-                        </VerticalStackLayout>
-                    </Border>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
-    </RefreshView>
+    <Grid>
+        <RefreshView x:Name="RefreshHost" Refreshing="OnRefreshing">
+            <CollectionView x:Name="DocList" SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Padding="24" Spacing="8">
+                        <Label Text="Plan room" Style="{StaticResource Headline}" FontSize="22" />
+                        <Label Text="Drawings, specs, and submittals shared with your team will be listed here." Style="{StaticResource Subhead}" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource Card}" Margin="16,8">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="{Binding Name}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
+                                <Label Text="{Binding Category}" TextColor="{StaticResource Blue}" />
+                                <Label Text="{Binding Status}" Style="{StaticResource Subhead}" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+
+        <ActivityIndicator x:Name="Busy" IsVisible="False" IsRunning="False"
+                           Color="{StaticResource Blue}" VerticalOptions="Center" HorizontalOptions="Center" />
+
+        <VerticalStackLayout x:Name="ErrorView" IsVisible="False" Padding="24" Spacing="12" VerticalOptions="Center">
+            <Label Text="We couldn't load the plan room" Style="{StaticResource Headline}" FontSize="20" HorizontalTextAlignment="Center" />
+            <Label Text="Check your connection and try again." Style="{StaticResource Subhead}" HorizontalTextAlignment="Center" />
+            <Button Text="Try again" Style="{StaticResource PrimaryButton}" Clicked="OnRetryClicked" />
+        </VerticalStackLayout>
+    </Grid>
 
 </ContentPage>
