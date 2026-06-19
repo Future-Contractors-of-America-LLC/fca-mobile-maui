@@ -4,7 +4,7 @@
              x:Class="Fca.Mobile.Pages.CustomerSuccessPage"
              Title="Customer Success">
 
-    <Grid RowDefinitions="Auto,*" Padding="0">
+    <Grid RowDefinitions="Auto,*">
         <VerticalStackLayout Grid.Row="0" Padding="16" Spacing="8">
             <Entry x:Name="SubjectEntry" Placeholder="Case subject" Style="{StaticResource Field}" />
             <Picker x:Name="PriorityPicker" Title="Priority">
@@ -15,27 +15,42 @@
                 </Picker.Items>
             </Picker>
             <Editor x:Name="DetailEditor" Placeholder="Describe what you need from customer success" HeightRequest="100" />
-            <Button Text="Open support case" Style="{StaticResource PrimaryButton}" Clicked="OnCreateClicked" />
+            <Button x:Name="CreateButton" Text="Open support case" Style="{StaticResource PrimaryButton}" Clicked="OnCreateClicked" />
         </VerticalStackLayout>
 
-        <RefreshView Grid.Row="1" x:Name="RefreshHost" Refreshing="OnRefreshing">
-            <CollectionView x:Name="CaseList" SelectionMode="None">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Border Style="{StaticResource Card}" Margin="16,8">
-                            <VerticalStackLayout Spacing="4">
-                                <Label Text="{Binding Subject}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
-                                <HorizontalStackLayout Spacing="12">
-                                    <Label Text="{Binding Priority}" TextColor="{StaticResource Blue}" />
-                                    <Label Text="{Binding Status}" Style="{StaticResource Subhead}" />
-                                </HorizontalStackLayout>
-                                <Label Text="{Binding Detail}" Style="{StaticResource Subhead}" />
-                            </VerticalStackLayout>
-                        </Border>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-        </RefreshView>
+        <Grid Grid.Row="1">
+            <RefreshView x:Name="RefreshHost" Refreshing="OnRefreshing">
+                <CollectionView x:Name="CaseList" SelectionMode="None">
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout Padding="24" Spacing="8">
+                            <Label Text="No open cases" Style="{StaticResource Headline}" FontSize="22" />
+                            <Label Text="Support cases you open will appear here so you can track progress." Style="{StaticResource Subhead}" />
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource Card}" Margin="16,8">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="{Binding Subject}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
+                                    <HorizontalStackLayout Spacing="12">
+                                        <Label Text="{Binding Priority}" TextColor="{StaticResource Blue}" />
+                                        <Label Text="{Binding Status}" Style="{StaticResource Subhead}" />
+                                    </HorizontalStackLayout>
+                                    <Label Text="{Binding Detail}" Style="{StaticResource Subhead}" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </RefreshView>
+
+            <ActivityIndicator x:Name="LoadingIndicator"
+                               IsRunning="False"
+                               IsVisible="False"
+                               Color="{StaticResource Blue}"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center" />
+        </Grid>
     </Grid>
 
 </ContentPage>

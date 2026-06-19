@@ -4,7 +4,7 @@
              x:Class="Fca.Mobile.Pages.CommunicationsPage"
              Title="Communications">
 
-    <Grid RowDefinitions="Auto,*" Padding="0">
+    <Grid RowDefinitions="Auto,*">
         <VerticalStackLayout Grid.Row="0" Padding="16" Spacing="8">
             <Entry x:Name="SubjectEntry" Placeholder="Subject" Style="{StaticResource Field}" />
             <Editor x:Name="MessageEditor" Placeholder="Message for your FCA success team" HeightRequest="100" />
@@ -15,24 +15,39 @@
                     <x:String>portal</x:String>
                 </Picker.Items>
             </Picker>
-            <Button Text="Send message" Style="{StaticResource PrimaryButton}" Clicked="OnSendClicked" />
+            <Button x:Name="SendButton" Text="Send message" Style="{StaticResource PrimaryButton}" Clicked="OnSendClicked" />
         </VerticalStackLayout>
 
-        <RefreshView Grid.Row="1" x:Name="RefreshHost" Refreshing="OnRefreshing">
-            <CollectionView x:Name="MessageList" SelectionMode="None">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Border Style="{StaticResource Card}" Margin="16,8">
-                            <VerticalStackLayout Spacing="4">
-                                <Label Text="{Binding Subject}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
-                                <Label Text="{Binding Message}" Style="{StaticResource Subhead}" />
-                                <Label Text="{Binding Channel}" TextColor="{StaticResource Blue}" FontSize="12" />
-                            </VerticalStackLayout>
-                        </Border>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-        </RefreshView>
+        <Grid Grid.Row="1">
+            <RefreshView x:Name="RefreshHost" Refreshing="OnRefreshing">
+                <CollectionView x:Name="MessageList" SelectionMode="None">
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout Padding="24" Spacing="8">
+                            <Label Text="No messages yet" Style="{StaticResource Headline}" FontSize="22" />
+                            <Label Text="Messages sent to your FCA success team will appear here." Style="{StaticResource Subhead}" />
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource Card}" Margin="16,8">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="{Binding Subject}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
+                                    <Label Text="{Binding Message}" Style="{StaticResource Subhead}" />
+                                    <Label Text="{Binding Channel}" TextColor="{StaticResource Blue}" FontSize="12" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </RefreshView>
+
+            <ActivityIndicator x:Name="LoadingIndicator"
+                               IsRunning="False"
+                               IsVisible="False"
+                               Color="{StaticResource Blue}"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center" />
+        </Grid>
     </Grid>
 
 </ContentPage>

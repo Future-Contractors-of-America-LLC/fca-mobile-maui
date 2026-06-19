@@ -4,26 +4,35 @@
              x:Class="Fca.Mobile.Pages.TrainingPage"
              Title="Training">
 
-    <RefreshView x:Name="RefreshHost" Refreshing="OnRefreshing">
-        <CollectionView x:Name="ProgramList" SelectionMode="None">
-            <CollectionView.EmptyView>
-                <VerticalStackLayout Padding="24" Spacing="8">
-                    <Label Text="Workforce training catalog" Style="{StaticResource Headline}" FontSize="22" />
-                    <Label Text="Safety, trade credentials, and supervisor programs will appear as your Academy catalog is assigned." Style="{StaticResource Subhead}" />
-                </VerticalStackLayout>
-            </CollectionView.EmptyView>
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Border Style="{StaticResource Card}" Margin="16,8">
-                        <VerticalStackLayout Spacing="4">
-                            <Label Text="{Binding Title}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
-                            <Label Text="{Binding Level}" TextColor="{StaticResource Blue}" />
-                            <Label Text="{Binding Status}" Style="{StaticResource Subhead}" />
-                        </VerticalStackLayout>
-                    </Border>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
-    </RefreshView>
+    <Grid>
+        <RefreshView x:Name="RefreshHost" Refreshing="OnRefreshing">
+            <CollectionView x:Name="ProgramList" SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Padding="24" Spacing="8">
+                        <Label Text="Workforce training catalog" Style="{StaticResource Headline}" FontSize="22" />
+                        <Label Text="Safety, trade credentials, and supervisor programs will appear as your Academy catalog is assigned." Style="{StaticResource Subhead}" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource Card}" Margin="16,8">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="{Binding Title}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
+                                <Label Text="{Binding Level}" TextColor="{StaticResource Blue}" />
+                                <Label Text="{Binding Status}" Style="{StaticResource Subhead}" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+
+        <ActivityIndicator x:Name="LoadingIndicator"
+                           IsRunning="False"
+                           IsVisible="False"
+                           Color="{StaticResource Blue}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center" />
+    </Grid>
 
 </ContentPage>

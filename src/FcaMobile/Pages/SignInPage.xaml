@@ -4,19 +4,28 @@
              x:Class="Fca.Mobile.Pages.SignInPage"
              Title="Sign In">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="24" Spacing="16">
-            <Label Text="Welcome back" Style="{StaticResource Headline}" />
-            <Label Text="Sign in to your FCA Contractor Command workspace." Style="{StaticResource Subhead}" />
+    <Grid>
+        <ScrollView>
+            <VerticalStackLayout Padding="24" Spacing="16">
+                <Label Text="Welcome back" Style="{StaticResource Headline}" />
+                <Label Text="Sign in to your FCA Contractor Command workspace." Style="{StaticResource Subhead}" />
 
-            <Entry x:Name="EmailEntry" Placeholder="Work email" Keyboard="Email" Style="{StaticResource Field}" />
-            <Entry x:Name="PasswordEntry" Placeholder="Password" IsPassword="True" Style="{StaticResource Field}" />
+                <Entry x:Name="EmailEntry" Placeholder="Work email" Keyboard="Email" Style="{StaticResource Field}" />
+                <Entry x:Name="PasswordEntry" Placeholder="Password" IsPassword="True" Style="{StaticResource Field}" />
 
-            <Label x:Name="StatusLabel" TextColor="#DC2626" IsVisible="False" />
+                <Label x:Name="StatusLabel" TextColor="#DC2626" IsVisible="False" />
 
-            <Button Text="Sign In" Style="{StaticResource PrimaryButton}" Clicked="OnSignInClicked" />
-            <Button Text="Need an account? Get started" Style="{StaticResource SecondaryButton}" Clicked="OnGetStartedClicked" />
-        </VerticalStackLayout>
-    </ScrollView>
+                <Button x:Name="SignInButton" Text="Sign In" Style="{StaticResource PrimaryButton}" Clicked="OnSignInClicked" />
+                <Button x:Name="GetStartedButton" Text="Need an account? Get started" Style="{StaticResource SecondaryButton}" Clicked="OnGetStartedClicked" />
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <ActivityIndicator x:Name="LoadingIndicator"
+                           IsRunning="False"
+                           IsVisible="False"
+                           Color="{StaticResource Blue}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center" />
+    </Grid>
 
 </ContentPage>
