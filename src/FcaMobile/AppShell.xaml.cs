@@ -1,4 +1,5 @@
 using Fca.Mobile.Pages;
+using Fca.Mobile.Services;
 
 namespace Fca.Mobile;
 
@@ -10,7 +11,8 @@ public partial class AppShell : Shell
         LeadPipelinePage leads,
         JobSitesPage jobs,
         TrainingPage training,
-        AccountPage account)
+        AccountPage account,
+        CustomerStore store)
     {
         InitializeComponent();
 
@@ -28,5 +30,21 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("invoices", typeof(InvoicesPage));
         Routing.RegisterRoute("communications", typeof(CommunicationsPage));
         Routing.RegisterRoute("support", typeof(CustomerSuccessPage));
+
+        // Returning, signed-in customers skip the marketing welcome flow and
+        // land directly in their command center.
+        if (store.IsSignedIn)
+        {
+            Dispatcher.Dispatch(async () =>
+            {
+                try
+                {
+                    await GoToAsync("//main/command");
+                }
+                catch (Exception)
+                {
+                }
+            });
+        }
     }
 }
