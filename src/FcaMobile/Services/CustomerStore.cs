@@ -12,7 +12,17 @@ public sealed class CustomerStore
         var json = Preferences.Get(Key, string.Empty);
         if (string.IsNullOrWhiteSpace(json))
             return null;
-        return JsonSerializer.Deserialize<CustomerProfile>(json);
+
+        try
+        {
+            return JsonSerializer.Deserialize<CustomerProfile>(json);
+        }
+        catch (JsonException)
+        {
+            // Corrupt or legacy payload - reset rather than crash on launch.
+            Preferences.Remove(Key);
+            return null;
+        }
     }
 
     public void Save(CustomerProfile profile)
