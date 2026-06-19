@@ -1,4 +1,5 @@
 using Fca.Mobile.Services;
+using Fca.Mobile.Utilities;
 
 namespace Fca.Mobile.Pages;
 
@@ -12,17 +13,30 @@ public partial class LeadPipelinePage : ContentPage
         InitializeComponent();
     }
 
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
-        await LoadAsync();
+        _ = PageAsync.SafeOnAppearingAsync(this, LoadAsync);
     }
 
-    async Task LoadAsync() => LeadList.ItemsSource = await _api.GetLeadsAsync();
+    async Task LoadAsync()
+    {
+        await PageAsync.RunWithLoadingAsync(LoadingIndicator, ErrorLabel, async () =>
+        {
+            var result = await _api.GetLeadsAsync().ConfigureAwait(false);
+            if (result.IsSuccess)
+                LeadList.ItemsSource = result.Value;
+            else
+            {
+                ErrorLabel.Text = result.ErrorMessage ?? "Unable to load leads.";
+                ErrorLabel.IsVisible = true;
+            }
+        });
+    }
 
     async void OnRefreshing(object sender, EventArgs e)
     {
-        await LoadAsync();
+        await LoadAsync().ConfigureAwait(false);
         RefreshHost.IsRefreshing = false;
     }
 }

@@ -1,17 +1,16 @@
 using Fca.Mobile.Models;
 using Fca.Mobile.Services;
+using Fca.Mobile.Utilities;
 
 namespace Fca.Mobile.Pages;
 
 public partial class SignInPage : ContentPage
 {
     private readonly FcaApiClient _api;
-    private readonly CustomerStore _store;
 
-    public SignInPage(FcaApiClient api, CustomerStore store)
+    public SignInPage(FcaApiClient api)
     {
         _api = api;
-        _store = store;
         InitializeComponent();
     }
 
@@ -27,16 +26,20 @@ public partial class SignInPage : ContentPage
             return;
         }
 
-        var ok = await _api.SignInAsync(email, password);
-        if (!ok)
+        SignInButton.IsEnabled = false;
+        await PageAsync.RunWithLoadingAsync(LoadingIndicator, StatusLabel, async () =>
         {
-            StatusLabel.Text = "We could not verify those credentials. Check your email and password.";
-            StatusLabel.IsVisible = true;
-            return;
-        }
+            var result = await _api.SignInAsync(email, password).ConfigureAwait(false);
+            if (!result.IsSuccess)
+            {
+                StatusLabel.Text = result.ErrorMessage ?? "Sign in failed.";
+                StatusLabel.IsVisible = true;
+                return;
+            }
 
-        _store.Save(new CustomerProfile { Email = email, Password = password });
-        await Shell.Current.GoToAsync("//main/command");
+            await Shell.Current.GoToAsync("//main/command").ConfigureAwait(false);
+        });
+        SignInButton.IsEnabled = true;
     }
 
     async void OnGetStartedClicked(object sender, EventArgs e) =>

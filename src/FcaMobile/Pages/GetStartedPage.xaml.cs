@@ -1,5 +1,6 @@
 using Fca.Mobile.Models;
 using Fca.Mobile.Services;
+using Fca.Mobile.Utilities;
 
 namespace Fca.Mobile.Pages;
 
@@ -37,22 +38,33 @@ public partial class GetStartedPage : ContentPage
             return;
         }
 
-        try
+        SubmitButton.IsEnabled = false;
+        await PageAsync.RunWithLoadingAsync(LoadingIndicator, StatusLabel, async () =>
         {
-            await _api.SubmitLeadIntakeAsync(profile);
-            _store.Save(profile);
-        }
-        catch
-        {
-            _store.Save(profile);
-        }
+            var result = await _api.SubmitLeadIntakeAsync(profile).ConfigureAwait(false);
+            if (!result.IsSuccess)
+            {
+                StatusLabel.Text = result.ErrorMessage ?? "Unable to create your workspace.";
+                StatusLabel.IsVisible = true;
+                return;
+            }
 
-        var checkout = profile.Plan == "pilot"
-            ? _config.PilotCheckoutUrl
-            : string.IsNullOrWhiteSpace(_config.StartupCheckoutUrl) ? _config.WebsiteUrl + "/checkout" : _config.StartupCheckoutUrl;
+            await _store.SaveAsync(profile, profile.Password).ConfigureAwait(false);
 
-        await DisplayAlert("Workspace requested", "Your company profile is saved. Complete checkout to activate your plan.", "Continue");
-        await Launcher.OpenAsync(new Uri(checkout));
-        await Shell.Current.GoToAsync("//main/command");
+            var checkout = profile.Plan == "pilot"
+                ? _config.PilotCheckoutUrl
+                : string.IsNullOrWhiteSpace(_config.StartupCheckoutUrl)
+                    ? _config.WebsiteUrl + "/checkout"
+                    : _config.StartupCheckoutUrl;
+
+            await DisplayAlert(
+                "Workspace requested",
+                "Your company profile is saved. Complete checkout to activate your plan.",
+                "Continue").ConfigureAwait(false);
+
+            await Launcher.OpenAsync(new Uri(checkout)).ConfigureAwait(false);
+            await Shell.Current.GoToAsync("//main/command").ConfigureAwait(false);
+        });
+        SubmitButton.IsEnabled = true;
     }
 }

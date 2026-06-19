@@ -4,7 +4,7 @@
              x:Class="Fca.Mobile.Pages.CustomerSuccessPage"
              Title="Customer Success">
 
-    <Grid RowDefinitions="Auto,*" Padding="0">
+    <Grid RowDefinitions="Auto,Auto,*">
         <VerticalStackLayout Grid.Row="0" Padding="16" Spacing="8">
             <Entry x:Name="SubjectEntry" Placeholder="Case subject" Style="{StaticResource Field}" />
             <Picker x:Name="PriorityPicker" Title="Priority">
@@ -15,10 +15,16 @@
                 </Picker.Items>
             </Picker>
             <Editor x:Name="DetailEditor" Placeholder="Describe what you need from customer success" HeightRequest="100" />
-            <Button Text="Open support case" Style="{StaticResource PrimaryButton}" Clicked="OnCreateClicked" />
+            <Button x:Name="CreateButton" Text="Open support case" Style="{StaticResource PrimaryButton}" Clicked="OnCreateClicked" />
         </VerticalStackLayout>
 
-        <RefreshView Grid.Row="1" x:Name="RefreshHost" Refreshing="OnRefreshing">
+        <Label Grid.Row="1"
+               x:Name="ErrorLabel"
+               Style="{StaticResource ErrorLabel}"
+               Padding="16,0,16,8"
+               IsVisible="False" />
+
+        <RefreshView Grid.Row="2" x:Name="RefreshHost" Refreshing="OnRefreshing">
             <CollectionView x:Name="CaseList" SelectionMode="None">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
@@ -36,6 +42,14 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
         </RefreshView>
+
+        <ActivityIndicator Grid.RowSpan="3"
+                           x:Name="LoadingIndicator"
+                           IsRunning="False"
+                           IsVisible="False"
+                           Color="{StaticResource Blue}"
+                           VerticalOptions="Center"
+                           HorizontalOptions="Center" />
     </Grid>
 
 </ContentPage>

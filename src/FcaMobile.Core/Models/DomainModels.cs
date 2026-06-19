@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Fca.Mobile.Models;
 
 public sealed class CustomerProfile
@@ -6,6 +8,8 @@ public sealed class CustomerProfile
     public string Company { get; set; } = "";
     public string Name { get; set; } = "";
     public string Email { get; set; } = "";
+
+    [JsonIgnore]
     public string Password { get; set; } = "";
 }
 

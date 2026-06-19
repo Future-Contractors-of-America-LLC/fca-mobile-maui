@@ -47,6 +47,12 @@
         <Setter Property="Padding" Value="14,12" />
     </Style>
 
+    <Style x:Key="ErrorLabel" TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource Danger}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="LineBreakMode" Value="WordWrap" />
+    </Style>
+
     <Style x:Key="Field" TargetType="Entry">
         <Setter Property="BackgroundColor" Value="{StaticResource White}" />
         <Setter Property="TextColor" Value="{StaticResource Navy}" />

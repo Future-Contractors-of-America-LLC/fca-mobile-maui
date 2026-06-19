@@ -4,9 +4,16 @@
              x:Class="Fca.Mobile.Pages.CommandCenterPage"
              Title="Command Center">
 
-    <RefreshView x:Name="RefreshHost" Refreshing="OnRefreshing">
-        <ScrollView>
-            <VerticalStackLayout Padding="20" Spacing="16">
+    <Grid RowDefinitions="Auto,*">
+        <Label Grid.Row="0"
+               x:Name="ErrorLabel"
+               Style="{StaticResource ErrorLabel}"
+               Padding="16,8,16,0"
+               IsVisible="False" />
+
+        <RefreshView Grid.Row="1" x:Name="RefreshHost" Refreshing="OnRefreshing">
+            <ScrollView>
+                <VerticalStackLayout Padding="20" Spacing="16">
                 <Label x:Name="GreetingLabel" Style="{StaticResource Headline}" />
                 <Label Text="Your daily contractor operating picture - leads, jobs, documents, billing, and crew readiness in one place."
                        Style="{StaticResource Subhead}" />
@@ -43,8 +50,17 @@
                 <Button Text="Billing &amp; invoices" Style="{StaticResource SecondaryButton}" Clicked="OnInvoicesClicked" />
                 <Button Text="Customer communications" Style="{StaticResource SecondaryButton}" Clicked="OnCommsClicked" />
                 <Button Text="Customer success" Style="{StaticResource SecondaryButton}" Clicked="OnSupportClicked" />
-            </VerticalStackLayout>
-        </ScrollView>
-    </RefreshView>
+                </VerticalStackLayout>
+            </ScrollView>
+        </RefreshView>
+
+        <ActivityIndicator Grid.RowSpan="2"
+                           x:Name="LoadingIndicator"
+                           IsRunning="False"
+                           IsVisible="False"
+                           Color="{StaticResource Blue}"
+                           VerticalOptions="Center"
+                           HorizontalOptions="Center" />
+    </Grid>
 
 </ContentPage>

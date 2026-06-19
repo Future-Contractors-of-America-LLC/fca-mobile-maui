@@ -4,7 +4,7 @@
              x:Class="Fca.Mobile.Pages.CommunicationsPage"
              Title="Communications">
 
-    <Grid RowDefinitions="Auto,*" Padding="0">
+    <Grid RowDefinitions="Auto,Auto,*">
         <VerticalStackLayout Grid.Row="0" Padding="16" Spacing="8">
             <Entry x:Name="SubjectEntry" Placeholder="Subject" Style="{StaticResource Field}" />
             <Editor x:Name="MessageEditor" Placeholder="Message for your FCA success team" HeightRequest="100" />
@@ -15,10 +15,16 @@
                     <x:String>portal</x:String>
                 </Picker.Items>
             </Picker>
-            <Button Text="Send message" Style="{StaticResource PrimaryButton}" Clicked="OnSendClicked" />
+            <Button x:Name="SendButton" Text="Send message" Style="{StaticResource PrimaryButton}" Clicked="OnSendClicked" />
         </VerticalStackLayout>
 
-        <RefreshView Grid.Row="1" x:Name="RefreshHost" Refreshing="OnRefreshing">
+        <Label Grid.Row="1"
+               x:Name="ErrorLabel"
+               Style="{StaticResource ErrorLabel}"
+               Padding="16,0,16,8"
+               IsVisible="False" />
+
+        <RefreshView Grid.Row="2" x:Name="RefreshHost" Refreshing="OnRefreshing">
             <CollectionView x:Name="MessageList" SelectionMode="None">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
@@ -33,6 +39,14 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
         </RefreshView>
+
+        <ActivityIndicator Grid.RowSpan="3"
+                           x:Name="LoadingIndicator"
+                           IsRunning="False"
+                           IsVisible="False"
+                           Color="{StaticResource Blue}"
+                           VerticalOptions="Center"
+                           HorizontalOptions="Center" />
     </Grid>
 
 </ContentPage>

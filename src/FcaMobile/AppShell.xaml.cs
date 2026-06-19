@@ -1,10 +1,14 @@
 using Fca.Mobile.Pages;
+using Fca.Mobile.Services;
 
 namespace Fca.Mobile;
 
 public partial class AppShell : Shell
 {
+    private readonly CustomerStore _store;
+
     public AppShell(
+        CustomerStore store,
         WelcomePage welcome,
         CommandCenterPage commandCenter,
         LeadPipelinePage leads,
@@ -12,6 +16,7 @@ public partial class AppShell : Shell
         TrainingPage training,
         AccountPage account)
     {
+        _store = store;
         InitializeComponent();
 
         WelcomeShell.Content = welcome;
@@ -28,5 +33,27 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("invoices", typeof(InvoicesPage));
         Routing.RegisterRoute("communications", typeof(CommunicationsPage));
         Routing.RegisterRoute("support", typeof(CustomerSuccessPage));
+
+        Loaded += OnShellLoaded;
+        Navigating += OnShellNavigating;
     }
+
+    async void OnShellLoaded(object? sender, EventArgs e)
+    {
+        Loaded -= OnShellLoaded;
+        var route = _store.IsSignedIn ? "//main/command" : "//welcome";
+        await GoToAsync(route).ConfigureAwait(false);
+    }
+
+    void OnShellNavigating(object? sender, ShellNavigatingEventArgs e)
+    {
+        if (_store.IsSignedIn || !RequiresAuthentication(e.Target.Location.OriginalString))
+            return;
+
+        e.Cancel();
+        Dispatcher.Dispatch(async () => await GoToAsync("//welcome").ConfigureAwait(false));
+    }
+
+    private static bool RequiresAuthentication(string location) =>
+        location.Contains("/main/", StringComparison.OrdinalIgnoreCase);
 }

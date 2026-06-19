@@ -1,4 +1,5 @@
 using Fca.Mobile.Services;
+using Fca.Mobile.Utilities;
 
 namespace Fca.Mobile.Pages;
 
@@ -14,33 +15,47 @@ public partial class CommandCenterPage : ContentPage
         InitializeComponent();
     }
 
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
-        await LoadAsync();
+        _ = PageAsync.SafeOnAppearingAsync(this, LoadAsync);
     }
 
     async Task LoadAsync()
     {
-        var profile = _store.Load();
-        GreetingLabel.Text = profile?.Company is { Length: > 0 } company
-            ? $"{company} Command Center"
-            : "Your Command Center";
+        await PageAsync.RunWithLoadingAsync(LoadingIndicator, ErrorLabel, async () =>
+        {
+            var profile = _store.Load();
+            GreetingLabel.Text = profile?.Company is { Length: > 0 } company
+                ? $"{company} Command Center"
+                : "Your Command Center";
 
-        var leads = await _api.GetLeadsAsync();
-        var jobs = await _api.GetJobsAsync();
-        var docs = await _api.GetDocumentsAsync();
-        var training = await _api.GetTrainingAsync();
+            var leads = await _api.GetLeadsAsync().ConfigureAwait(false);
+            var jobs = await _api.GetJobsAsync().ConfigureAwait(false);
+            var docs = await _api.GetDocumentsAsync().ConfigureAwait(false);
+            var training = await _api.GetTrainingAsync().ConfigureAwait(false);
 
-        LeadCountLabel.Text = leads.Count.ToString();
-        JobCountLabel.Text = jobs.Count.ToString();
-        DocCountLabel.Text = docs.Count.ToString();
-        TrainingCountLabel.Text = (training?.Catalog?.Programs?.Count ?? 0).ToString();
+            if (!leads.IsSuccess || !jobs.IsSuccess || !docs.IsSuccess || !training.IsSuccess)
+            {
+                ErrorLabel.Text = leads.ErrorMessage
+                    ?? jobs.ErrorMessage
+                    ?? docs.ErrorMessage
+                    ?? training.ErrorMessage
+                    ?? "Unable to load your command center.";
+                ErrorLabel.IsVisible = true;
+                return;
+            }
+
+            LeadCountLabel.Text = leads.Value!.Count.ToString();
+            JobCountLabel.Text = jobs.Value!.Count.ToString();
+            DocCountLabel.Text = docs.Value!.Count.ToString();
+            TrainingCountLabel.Text = (training.Value?.Catalog?.Programs?.Count ?? 0).ToString();
+        });
     }
 
     async void OnRefreshing(object sender, EventArgs e)
     {
-        await LoadAsync();
+        await LoadAsync().ConfigureAwait(false);
         RefreshHost.IsRefreshing = false;
     }
 

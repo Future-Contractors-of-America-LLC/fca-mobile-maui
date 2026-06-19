@@ -1,4 +1,5 @@
 using Fca.Mobile.Services;
+using Fca.Mobile.Utilities;
 
 namespace Fca.Mobile.Pages;
 
@@ -28,8 +29,8 @@ public partial class AccountPage : ContentPage
 
     async void OnSignOutClicked(object sender, EventArgs e)
     {
-        _store.Clear();
-        await Shell.Current.GoToAsync("//welcome");
+        await _store.ClearAsync().ConfigureAwait(false);
+        await Shell.Current.GoToAsync("//welcome").ConfigureAwait(false);
     }
 
     async void OnWelcomeClicked(object sender, EventArgs e) =>

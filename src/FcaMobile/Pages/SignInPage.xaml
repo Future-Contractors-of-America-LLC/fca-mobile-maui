@@ -12,9 +12,12 @@
             <Entry x:Name="EmailEntry" Placeholder="Work email" Keyboard="Email" Style="{StaticResource Field}" />
             <Entry x:Name="PasswordEntry" Placeholder="Password" IsPassword="True" Style="{StaticResource Field}" />
 
-            <Label x:Name="StatusLabel" TextColor="#DC2626" IsVisible="False" />
+            <Label x:Name="StatusLabel" Style="{StaticResource ErrorLabel}" IsVisible="False" />
 
-            <Button Text="Sign In" Style="{StaticResource PrimaryButton}" Clicked="OnSignInClicked" />
+            <ActivityIndicator x:Name="LoadingIndicator" IsRunning="False" IsVisible="False"
+                               Color="{StaticResource Blue}" HorizontalOptions="Center" />
+
+            <Button x:Name="SignInButton" Text="Sign In" Style="{StaticResource PrimaryButton}" Clicked="OnSignInClicked" />
             <Button Text="Need an account? Get started" Style="{StaticResource SecondaryButton}" Clicked="OnGetStartedClicked" />
         </VerticalStackLayout>
     </ScrollView>

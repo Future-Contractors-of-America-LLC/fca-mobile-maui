@@ -21,9 +21,12 @@
             <Entry x:Name="EmailEntry" Placeholder="Work email" Keyboard="Email" Style="{StaticResource Field}" />
             <Entry x:Name="PasswordEntry" Placeholder="Create password" IsPassword="True" Style="{StaticResource Field}" />
 
-            <Label x:Name="StatusLabel" TextColor="#DC2626" IsVisible="False" />
+            <Label x:Name="StatusLabel" Style="{StaticResource ErrorLabel}" IsVisible="False" />
 
-            <Button Text="Create Workspace" Style="{StaticResource PrimaryButton}" Clicked="OnSubmitClicked" />
+            <ActivityIndicator x:Name="LoadingIndicator" IsRunning="False" IsVisible="False"
+                               Color="{StaticResource Blue}" HorizontalOptions="Center" />
+
+            <Button x:Name="SubmitButton" Text="Create Workspace" Style="{StaticResource PrimaryButton}" Clicked="OnSubmitClicked" />
         </VerticalStackLayout>
     </ScrollView>
 
