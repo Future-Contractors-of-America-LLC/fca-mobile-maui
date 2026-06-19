@@ -18,11 +18,27 @@ public partial class JobSitesPage : ContentPage
         await LoadAsync();
     }
 
-    async Task LoadAsync() => JobList.ItemsSource = await _api.GetJobsAsync();
+    async Task LoadAsync()
+    {
+        try
+        {
+            JobList.ItemsSource = await _api.GetJobsAsync();
+        }
+        catch
+        {
+            await this.ShowLoadErrorAsync("jobs");
+        }
+    }
 
     async void OnRefreshing(object sender, EventArgs e)
     {
-        await LoadAsync();
-        RefreshHost.IsRefreshing = false;
+        try
+        {
+            await LoadAsync();
+        }
+        finally
+        {
+            RefreshHost.IsRefreshing = false;
+        }
     }
 }

@@ -19,7 +19,17 @@ public partial class CommunicationsPage : ContentPage
         await LoadAsync();
     }
 
-    async Task LoadAsync() => MessageList.ItemsSource = await _api.GetMessagesAsync();
+    async Task LoadAsync()
+    {
+        try
+        {
+            MessageList.ItemsSource = await _api.GetMessagesAsync();
+        }
+        catch
+        {
+            await this.ShowLoadErrorAsync("messages");
+        }
+    }
 
     async void OnSendClicked(object sender, EventArgs e)
     {
@@ -32,15 +42,33 @@ public partial class CommunicationsPage : ContentPage
             return;
         }
 
-        await _api.SendMessageAsync(subject, message, channel);
-        SubjectEntry.Text = "";
-        MessageEditor.Text = "";
-        await LoadAsync();
+        SendButton.IsEnabled = false;
+        try
+        {
+            await _api.SendMessageAsync(subject, message, channel);
+            SubjectEntry.Text = "";
+            MessageEditor.Text = "";
+            await LoadAsync();
+        }
+        catch
+        {
+            await this.ShowSaveErrorAsync("send your message");
+        }
+        finally
+        {
+            SendButton.IsEnabled = true;
+        }
     }
 
     async void OnRefreshing(object sender, EventArgs e)
     {
-        await LoadAsync();
-        RefreshHost.IsRefreshing = false;
+        try
+        {
+            await LoadAsync();
+        }
+        finally
+        {
+            RefreshHost.IsRefreshing = false;
+        }
     }
 }

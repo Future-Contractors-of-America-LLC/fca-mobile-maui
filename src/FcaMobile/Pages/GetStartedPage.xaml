@@ -19,11 +19,10 @@
             <Entry x:Name="CompanyEntry" Placeholder="Company name" Style="{StaticResource Field}" />
             <Entry x:Name="NameEntry" Placeholder="Your name" Style="{StaticResource Field}" />
             <Entry x:Name="EmailEntry" Placeholder="Work email" Keyboard="Email" Style="{StaticResource Field}" />
-            <Entry x:Name="PasswordEntry" Placeholder="Create password" IsPassword="True" Style="{StaticResource Field}" />
 
             <Label x:Name="StatusLabel" TextColor="#DC2626" IsVisible="False" />
 
-            <Button Text="Create Workspace" Style="{StaticResource PrimaryButton}" Clicked="OnSubmitClicked" />
+            <Button x:Name="CreateWorkspaceButton" Text="Create Workspace" Style="{StaticResource PrimaryButton}" Clicked="OnSubmitClicked" />
         </VerticalStackLayout>
     </ScrollView>
 

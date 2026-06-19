@@ -15,7 +15,7 @@
                     <x:String>portal</x:String>
                 </Picker.Items>
             </Picker>
-            <Button Text="Send message" Style="{StaticResource PrimaryButton}" Clicked="OnSendClicked" />
+            <Button x:Name="SendButton" Text="Send message" Style="{StaticResource PrimaryButton}" Clicked="OnSendClicked" />
         </VerticalStackLayout>
 
         <RefreshView Grid.Row="1" x:Name="RefreshHost" Refreshing="OnRefreshing">

@@ -15,7 +15,7 @@
                 </Picker.Items>
             </Picker>
             <Editor x:Name="DetailEditor" Placeholder="Describe what you need from customer success" HeightRequest="100" />
-            <Button Text="Open support case" Style="{StaticResource PrimaryButton}" Clicked="OnCreateClicked" />
+            <Button x:Name="CreateCaseButton" Text="Open support case" Style="{StaticResource PrimaryButton}" Clicked="OnCreateClicked" />
         </VerticalStackLayout>
 
         <RefreshView Grid.Row="1" x:Name="RefreshHost" Refreshing="OnRefreshing">

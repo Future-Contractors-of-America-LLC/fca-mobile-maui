@@ -18,7 +18,9 @@ public partial class GetStartedPage : ContentPage
         PlanPicker.SelectedIndex = 0;
     }
 
-    async void OnSubmitClicked(object sender, EventArgs e)
+    async void OnSubmitClicked(object sender, EventArgs e) => await SubmitAsync();
+
+    private async Task SubmitAsync()
     {
         StatusLabel.IsVisible = false;
         var profile = new CustomerProfile
@@ -27,32 +29,44 @@ public partial class GetStartedPage : ContentPage
             Company = CompanyEntry.Text?.Trim() ?? "",
             Name = NameEntry.Text?.Trim() ?? "",
             Email = EmailEntry.Text?.Trim() ?? "",
-            Password = PasswordEntry.Text ?? "",
         };
 
         if (string.IsNullOrWhiteSpace(profile.Company) || string.IsNullOrWhiteSpace(profile.Email))
         {
-            StatusLabel.Text = "Company name and work email are required.";
-            StatusLabel.IsVisible = true;
+            ShowStatus("Company name and work email are required.");
             return;
         }
+
+        IsBusy = true;
+        CreateWorkspaceButton.IsEnabled = false;
 
         try
         {
             await _api.SubmitLeadIntakeAsync(profile);
             _store.Save(profile);
+
+            var checkout = profile.Plan == "pilot"
+                ? _config.PilotCheckoutUrl
+                : string.IsNullOrWhiteSpace(_config.StartupCheckoutUrl) ? _config.WebsiteUrl + "/checkout" : _config.StartupCheckoutUrl;
+
+            await DisplayAlert("Workspace requested", "Your company profile is saved. Complete checkout to activate your plan.", "Continue");
+            await Launcher.OpenAsync(new Uri(checkout));
+            await Shell.Current.GoToAsync("//main/command");
         }
         catch
         {
-            _store.Save(profile);
+            ShowStatus("We could not submit your workspace request. Check your connection and try again.");
         }
+        finally
+        {
+            CreateWorkspaceButton.IsEnabled = true;
+            IsBusy = false;
+        }
+    }
 
-        var checkout = profile.Plan == "pilot"
-            ? _config.PilotCheckoutUrl
-            : string.IsNullOrWhiteSpace(_config.StartupCheckoutUrl) ? _config.WebsiteUrl + "/checkout" : _config.StartupCheckoutUrl;
-
-        await DisplayAlert("Workspace requested", "Your company profile is saved. Complete checkout to activate your plan.", "Continue");
-        await Launcher.OpenAsync(new Uri(checkout));
-        await Shell.Current.GoToAsync("//main/command");
+    private void ShowStatus(string message)
+    {
+        StatusLabel.Text = message;
+        StatusLabel.IsVisible = true;
     }
 }

@@ -20,13 +20,26 @@ public partial class TrainingPage : ContentPage
 
     async Task LoadAsync()
     {
-        var snapshot = await _api.GetTrainingAsync();
-        ProgramList.ItemsSource = snapshot?.Catalog?.Programs ?? new List<Models.AcademyProgram>();
+        try
+        {
+            var snapshot = await _api.GetTrainingAsync();
+            ProgramList.ItemsSource = snapshot?.Catalog?.Programs ?? new List<Models.AcademyProgram>();
+        }
+        catch
+        {
+            await this.ShowLoadErrorAsync("training programs");
+        }
     }
 
     async void OnRefreshing(object sender, EventArgs e)
     {
-        await LoadAsync();
-        RefreshHost.IsRefreshing = false;
+        try
+        {
+            await LoadAsync();
+        }
+        finally
+        {
+            RefreshHost.IsRefreshing = false;
+        }
     }
 }

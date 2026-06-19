@@ -27,21 +27,34 @@ public partial class CommandCenterPage : ContentPage
             ? $"{company} Command Center"
             : "Your Command Center";
 
-        var leads = await _api.GetLeadsAsync();
-        var jobs = await _api.GetJobsAsync();
-        var docs = await _api.GetDocumentsAsync();
-        var training = await _api.GetTrainingAsync();
+        try
+        {
+            var leads = await _api.GetLeadsAsync();
+            var jobs = await _api.GetJobsAsync();
+            var docs = await _api.GetDocumentsAsync();
+            var training = await _api.GetTrainingAsync();
 
-        LeadCountLabel.Text = leads.Count.ToString();
-        JobCountLabel.Text = jobs.Count.ToString();
-        DocCountLabel.Text = docs.Count.ToString();
-        TrainingCountLabel.Text = (training?.Catalog?.Programs?.Count ?? 0).ToString();
+            LeadCountLabel.Text = leads.Count.ToString();
+            JobCountLabel.Text = jobs.Count.ToString();
+            DocCountLabel.Text = docs.Count.ToString();
+            TrainingCountLabel.Text = (training?.Catalog?.Programs?.Count ?? 0).ToString();
+        }
+        catch
+        {
+            await this.ShowLoadErrorAsync("your command center");
+        }
     }
 
     async void OnRefreshing(object sender, EventArgs e)
     {
-        await LoadAsync();
-        RefreshHost.IsRefreshing = false;
+        try
+        {
+            await LoadAsync();
+        }
+        finally
+        {
+            RefreshHost.IsRefreshing = false;
+        }
     }
 
     async void OnLeadsClicked(object sender, EventArgs e) => await Shell.Current.GoToAsync("//main/leads");

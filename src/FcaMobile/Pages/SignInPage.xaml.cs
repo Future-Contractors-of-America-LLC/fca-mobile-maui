@@ -15,7 +15,9 @@ public partial class SignInPage : ContentPage
         InitializeComponent();
     }
 
-    async void OnSignInClicked(object sender, EventArgs e)
+    async void OnSignInClicked(object sender, EventArgs e) => await SignInAsync();
+
+    private async Task SignInAsync()
     {
         StatusLabel.IsVisible = false;
         var email = EmailEntry.Text?.Trim() ?? "";
@@ -27,18 +29,40 @@ public partial class SignInPage : ContentPage
             return;
         }
 
-        var ok = await _api.SignInAsync(email, password);
-        if (!ok)
-        {
-            StatusLabel.Text = "We could not verify those credentials. Check your email and password.";
-            StatusLabel.IsVisible = true;
-            return;
-        }
+        IsBusy = true;
+        SignInButton.IsEnabled = false;
 
-        _store.Save(new CustomerProfile { Email = email, Password = password });
-        await Shell.Current.GoToAsync("//main/command");
+        try
+        {
+            var result = await _api.SignInAsync(email, password);
+            if (!result.IsSuccessful)
+            {
+                ShowStatus("We could not verify those credentials. Check your email and password.");
+                return;
+            }
+
+            await _store.SaveAccessTokenAsync(result.AccessToken);
+            _store.Save(new CustomerProfile { Email = email });
+            PasswordEntry.Text = "";
+            await Shell.Current.GoToAsync("//main/command");
+        }
+        catch
+        {
+            ShowStatus("Sign in is temporarily unavailable. Check your connection and try again.");
+        }
+        finally
+        {
+            SignInButton.IsEnabled = true;
+            IsBusy = false;
+        }
     }
 
     async void OnGetStartedClicked(object sender, EventArgs e) =>
         await Shell.Current.GoToAsync("getstarted");
+
+    private void ShowStatus(string message)
+    {
+        StatusLabel.Text = message;
+        StatusLabel.IsVisible = true;
+    }
 }

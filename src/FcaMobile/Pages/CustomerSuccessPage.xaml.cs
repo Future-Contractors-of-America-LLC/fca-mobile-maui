@@ -19,7 +19,17 @@ public partial class CustomerSuccessPage : ContentPage
         await LoadAsync();
     }
 
-    async Task LoadAsync() => CaseList.ItemsSource = await _api.GetSupportCasesAsync();
+    async Task LoadAsync()
+    {
+        try
+        {
+            CaseList.ItemsSource = await _api.GetSupportCasesAsync();
+        }
+        catch
+        {
+            await this.ShowLoadErrorAsync("support cases");
+        }
+    }
 
     async void OnCreateClicked(object sender, EventArgs e)
     {
@@ -32,15 +42,33 @@ public partial class CustomerSuccessPage : ContentPage
             return;
         }
 
-        await _api.CreateSupportCaseAsync(subject, priority, detail);
-        SubjectEntry.Text = "";
-        DetailEditor.Text = "";
-        await LoadAsync();
+        CreateCaseButton.IsEnabled = false;
+        try
+        {
+            await _api.CreateSupportCaseAsync(subject, priority, detail);
+            SubjectEntry.Text = "";
+            DetailEditor.Text = "";
+            await LoadAsync();
+        }
+        catch
+        {
+            await this.ShowSaveErrorAsync("open your support case");
+        }
+        finally
+        {
+            CreateCaseButton.IsEnabled = true;
+        }
     }
 
     async void OnRefreshing(object sender, EventArgs e)
     {
-        await LoadAsync();
-        RefreshHost.IsRefreshing = false;
+        try
+        {
+            await LoadAsync();
+        }
+        finally
+        {
+            RefreshHost.IsRefreshing = false;
+        }
     }
 }

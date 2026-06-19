@@ -14,7 +14,7 @@
 
             <Label x:Name="StatusLabel" TextColor="#DC2626" IsVisible="False" />
 
-            <Button Text="Sign In" Style="{StaticResource PrimaryButton}" Clicked="OnSignInClicked" />
+            <Button x:Name="SignInButton" Text="Sign In" Style="{StaticResource PrimaryButton}" Clicked="OnSignInClicked" />
             <Button Text="Need an account? Get started" Style="{StaticResource SecondaryButton}" Clicked="OnGetStartedClicked" />
         </VerticalStackLayout>
     </ScrollView>
