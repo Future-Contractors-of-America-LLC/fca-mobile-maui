@@ -8,7 +8,7 @@
         <ScrollView>
             <VerticalStackLayout Padding="20" Spacing="16">
                 <Label x:Name="GreetingLabel" Style="{StaticResource Headline}" />
-                <Label Text="Your daily contractor operating picture — leads, jobs, documents, billing, and crew readiness in one place."
+                <Label Text="Your daily contractor operating picture - leads, jobs, documents, billing, and crew readiness in one place."
                        Style="{StaticResource Subhead}" />
 
                 <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="12">

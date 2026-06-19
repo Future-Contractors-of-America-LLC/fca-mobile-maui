@@ -8,7 +8,7 @@
         <VerticalStackLayout Padding="24" Spacing="20">
             <Label Text="FCA Contractor Command" Style="{StaticResource Headline}" />
             <Label Style="{StaticResource Subhead}"
-                   Text="One mobile command center for leads, job sites, plan rooms, billing, and workforce training — built for commercial contractors competing at enterprise scale." />
+                   Text="One mobile command center for leads, job sites, plan rooms, billing, and workforce training - built for commercial contractors competing at enterprise scale." />
 
             <Border Style="{StaticResource Card}">
                 <VerticalStackLayout Spacing="8">

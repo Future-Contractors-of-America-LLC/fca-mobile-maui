@@ -11,7 +11,7 @@
 
             <Border Style="{StaticResource Card}">
                 <VerticalStackLayout Spacing="6">
-                    <Label Text="Startup — $99/mo" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
+                    <Label Text="Startup - $99/mo" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
                     <Label Text="For emerging contractors winning their first commercial accounts." Style="{StaticResource Subhead}" />
                 </VerticalStackLayout>
             </Border>
