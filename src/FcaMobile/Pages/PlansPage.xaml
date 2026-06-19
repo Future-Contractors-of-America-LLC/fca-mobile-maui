@@ -17,13 +17,13 @@
             </Border>
             <Border Style="{StaticResource Card}">
                 <VerticalStackLayout Spacing="6">
-                    <Label Text="Pilot — $2,500" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
+                    <Label Text="Pilot - $2,500" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
                     <Label Text="White-glove onboarding for teams ready to standardize bids, jobs, and field communication." Style="{StaticResource Subhead}" />
                 </VerticalStackLayout>
             </Border>
             <Border Style="{StaticResource Card}">
                 <VerticalStackLayout Spacing="6">
-                    <Label Text="Enterprise — custom" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
+                    <Label Text="Enterprise - custom" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
                     <Label Text="Multi-office rollouts with advanced controls, integrations, and dedicated success coverage." Style="{StaticResource Subhead}" />
                 </VerticalStackLayout>
             </Border>
