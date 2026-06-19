@@ -6,5 +6,6 @@ public partial class App : Application
     {
         InitializeComponent();
         MainPage = shell;
+        shell.RestoreSession();
     }
 }

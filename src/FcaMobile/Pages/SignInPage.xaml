@@ -9,13 +9,36 @@
             <Label Text="Welcome back" Style="{StaticResource Headline}" />
             <Label Text="Sign in to your FCA Contractor Command workspace." Style="{StaticResource Subhead}" />
 
-            <Entry x:Name="EmailEntry" Placeholder="Work email" Keyboard="Email" Style="{StaticResource Field}" />
-            <Entry x:Name="PasswordEntry" Placeholder="Password" IsPassword="True" Style="{StaticResource Field}" />
+            <Entry x:Name="EmailEntry"
+                   AutomationId="SignInEmailEntry"
+                   Placeholder="Work email"
+                   Keyboard="Email"
+                   Style="{StaticResource Field}"
+                   SemanticProperties.Description="Work email address" />
+            <Entry x:Name="PasswordEntry"
+                   AutomationId="SignInPasswordEntry"
+                   Placeholder="Password"
+                   IsPassword="True"
+                   Style="{StaticResource Field}"
+                   SemanticProperties.Description="Password" />
 
-            <Label x:Name="StatusLabel" TextColor="#DC2626" IsVisible="False" />
+            <Label x:Name="StatusLabel"
+                   TextColor="#DC2626"
+                   IsVisible="False"
+                   SemanticProperties.Description="Sign in status" />
 
-            <Button Text="Sign In" Style="{StaticResource PrimaryButton}" Clicked="OnSignInClicked" />
-            <Button Text="Need an account? Get started" Style="{StaticResource SecondaryButton}" Clicked="OnGetStartedClicked" />
+            <ActivityIndicator x:Name="BusyIndicator" IsVisible="False" IsRunning="False" />
+
+            <Button x:Name="SignInButton"
+                    Text="Sign In"
+                    AutomationId="SignInSubmitButton"
+                    Style="{StaticResource PrimaryButton}"
+                    Clicked="OnSignInClicked" />
+            <Button x:Name="GetStartedButton"
+                    Text="Need an account? Get started"
+                    AutomationId="SignInGetStartedButton"
+                    Style="{StaticResource SecondaryButton}"
+                    Clicked="OnGetStartedClicked" />
         </VerticalStackLayout>
     </ScrollView>
 

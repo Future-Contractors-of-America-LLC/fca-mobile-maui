@@ -20,6 +20,9 @@ public partial class GetStartedPage : ContentPage
 
     async void OnSubmitClicked(object sender, EventArgs e)
     {
+        if (!CreateWorkspaceButton.IsEnabled)
+            return;
+
         StatusLabel.IsVisible = false;
         var profile = new CustomerProfile
         {
@@ -27,7 +30,6 @@ public partial class GetStartedPage : ContentPage
             Company = CompanyEntry.Text?.Trim() ?? "",
             Name = NameEntry.Text?.Trim() ?? "",
             Email = EmailEntry.Text?.Trim() ?? "",
-            Password = PasswordEntry.Text ?? "",
         };
 
         if (string.IsNullOrWhiteSpace(profile.Company) || string.IsNullOrWhiteSpace(profile.Email))
@@ -37,22 +39,43 @@ public partial class GetStartedPage : ContentPage
             return;
         }
 
+        SetSubmitting(true);
         try
         {
-            await _api.SubmitLeadIntakeAsync(profile);
+            var submitted = await _api.SubmitLeadIntakeAsync(profile);
+            if (!submitted)
+            {
+                StatusLabel.Text = "We could not submit your workspace request. Please try again.";
+                StatusLabel.IsVisible = true;
+                return;
+            }
+
             _store.Save(profile);
         }
-        catch
+        catch (Exception)
         {
-            _store.Save(profile);
+            StatusLabel.Text = "Workspace setup is temporarily unavailable. Check your connection and try again.";
+            StatusLabel.IsVisible = true;
+            return;
+        }
+        finally
+        {
+            SetSubmitting(false);
         }
 
         var checkout = profile.Plan == "pilot"
             ? _config.PilotCheckoutUrl
             : string.IsNullOrWhiteSpace(_config.StartupCheckoutUrl) ? _config.WebsiteUrl + "/checkout" : _config.StartupCheckoutUrl;
 
-        await DisplayAlert("Workspace requested", "Your company profile is saved. Complete checkout to activate your plan.", "Continue");
+        await DisplayAlert("Workspace requested", "Your company profile is saved. Complete checkout to activate your plan, then sign in when your workspace is active.", "Continue");
         await Launcher.OpenAsync(new Uri(checkout));
-        await Shell.Current.GoToAsync("//main/command");
+        await Shell.Current.GoToAsync("//welcome");
+    }
+
+    private void SetSubmitting(bool isSubmitting)
+    {
+        CreateWorkspaceButton.IsEnabled = !isSubmitting;
+        BusyIndicator.IsVisible = isSubmitting;
+        BusyIndicator.IsRunning = isSubmitting;
     }
 }

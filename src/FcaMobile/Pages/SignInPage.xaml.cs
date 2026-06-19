@@ -17,6 +17,9 @@ public partial class SignInPage : ContentPage
 
     async void OnSignInClicked(object sender, EventArgs e)
     {
+        if (!SignInButton.IsEnabled)
+            return;
+
         StatusLabel.IsVisible = false;
         var email = EmailEntry.Text?.Trim() ?? "";
         var password = PasswordEntry.Text ?? "";
@@ -27,18 +30,41 @@ public partial class SignInPage : ContentPage
             return;
         }
 
-        var ok = await _api.SignInAsync(email, password);
-        if (!ok)
+        SetSubmitting(true);
+        try
         {
-            StatusLabel.Text = "We could not verify those credentials. Check your email and password.";
-            StatusLabel.IsVisible = true;
-            return;
-        }
+            var result = await _api.SignInAsync(email, password);
+            if (!result.IsAuthenticated)
+            {
+                StatusLabel.Text = "We could not verify those credentials. Check your email and password.";
+                StatusLabel.IsVisible = true;
+                return;
+            }
 
-        _store.Save(new CustomerProfile { Email = email, Password = password });
-        await Shell.Current.GoToAsync("//main/command");
+            var profile = _store.Load() ?? new CustomerProfile();
+            await _store.CompleteSignInAsync(email, result.AuthToken, profile);
+            PasswordEntry.Text = string.Empty;
+            await Shell.Current.GoToAsync("//main/command");
+        }
+        catch (Exception)
+        {
+            StatusLabel.Text = "Sign in is temporarily unavailable. Check your connection and try again.";
+            StatusLabel.IsVisible = true;
+        }
+        finally
+        {
+            SetSubmitting(false);
+        }
     }
 
     async void OnGetStartedClicked(object sender, EventArgs e) =>
         await Shell.Current.GoToAsync("getstarted");
+
+    private void SetSubmitting(bool isSubmitting)
+    {
+        SignInButton.IsEnabled = !isSubmitting;
+        GetStartedButton.IsEnabled = !isSubmitting;
+        BusyIndicator.IsVisible = isSubmitting;
+        BusyIndicator.IsRunning = isSubmitting;
+    }
 }

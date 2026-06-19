@@ -1,17 +1,22 @@
 using Fca.Mobile.Pages;
+using Fca.Mobile.Services;
 
 namespace Fca.Mobile;
 
 public partial class AppShell : Shell
 {
+    private readonly CustomerStore _store;
+
     public AppShell(
         WelcomePage welcome,
         CommandCenterPage commandCenter,
         LeadPipelinePage leads,
         JobSitesPage jobs,
         TrainingPage training,
-        AccountPage account)
+        AccountPage account,
+        CustomerStore store)
     {
+        _store = store;
         InitializeComponent();
 
         WelcomeShell.Content = welcome;
@@ -29,4 +34,26 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("communications", typeof(CommunicationsPage));
         Routing.RegisterRoute("support", typeof(CustomerSuccessPage));
     }
+
+    protected override void OnNavigating(ShellNavigatingEventArgs args)
+    {
+        if (!_store.IsSignedIn && IsProtectedRoute(args.Target.Location.OriginalString))
+        {
+            args.Cancel();
+            Dispatcher.Dispatch(async () => await GoToAsync("//welcome"));
+            return;
+        }
+
+        base.OnNavigating(args);
+    }
+
+    public void RestoreSession()
+    {
+        if (_store.IsSignedIn)
+            Dispatcher.Dispatch(async () => await GoToAsync("//main/command"));
+    }
+
+    private static bool IsProtectedRoute(string location)
+        => location.Contains("//main", StringComparison.OrdinalIgnoreCase)
+           || location.Contains("/main/", StringComparison.OrdinalIgnoreCase);
 }

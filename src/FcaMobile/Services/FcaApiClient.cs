@@ -1,31 +1,40 @@
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Fca.Mobile.Models;
 
 namespace Fca.Mobile.Services;
 
+public sealed record SignInResult(bool IsAuthenticated, string? AuthToken = null);
+
 public sealed class FcaApiClient
 {
     private readonly HttpClient _http;
+    private readonly CustomerStore _store;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
     };
 
-    public FcaApiClient(FcaConfig config)
+    public FcaApiClient(FcaConfig config, CustomerStore store)
     {
+        _store = store;
         _http = new HttpClient { BaseAddress = new Uri($"{config.PlatformBaseUrl.TrimEnd('/')}/api/") };
     }
 
-    public async Task<bool> SignInAsync(string email, string password, CancellationToken ct = default)
+    public async Task<SignInResult> SignInAsync(string email, string password, CancellationToken ct = default)
     {
         var response = await _http.PostAsJsonAsync("customer-login", new { email, password }, ct);
         if (!response.IsSuccessStatusCode)
-            return false;
+            return new SignInResult(false);
+
         var json = await response.Content.ReadAsStringAsync(ct);
         using var doc = JsonDocument.Parse(json);
-        return doc.RootElement.TryGetProperty("ok", out var ok) && ok.GetBoolean();
+        if (!doc.RootElement.TryGetProperty("ok", out var ok) || ok.ValueKind != JsonValueKind.True)
+            return new SignInResult(false);
+
+        return new SignInResult(true, ExtractAuthToken(doc.RootElement));
     }
 
     public async Task<IReadOnlyList<BidRecord>> GetLeadsAsync(CancellationToken ct = default)
@@ -74,7 +83,7 @@ public sealed class FcaApiClient
 
     public async Task SendMessageAsync(string subject, string message, string channel, CancellationToken ct = default)
     {
-        await _http.PostAsJsonAsync("portal-messages", new { subject, message, channel }, ct);
+        await SendAuthenticatedJsonAsync("portal-messages", new { subject, message, channel }, ct);
     }
 
     public async Task<IReadOnlyList<PortalInvoice>> GetInvoicesAsync(CancellationToken ct = default)
@@ -85,10 +94,10 @@ public sealed class FcaApiClient
 
     public async Task CreateSupportCaseAsync(string subject, string priority, string detail, CancellationToken ct = default)
     {
-        await _http.PostAsJsonAsync("support-tickets", new { subject, priority, detail }, ct);
+        await SendAuthenticatedJsonAsync("support-tickets", new { subject, priority, detail }, ct);
     }
 
-    public async Task SubmitLeadIntakeAsync(CustomerProfile profile, CancellationToken ct = default)
+    public async Task<bool> SubmitLeadIntakeAsync(CustomerProfile profile, CancellationToken ct = default)
     {
         var value = profile.Plan switch
         {
@@ -106,6 +115,7 @@ public sealed class FcaApiClient
             status = "new",
             source = "fca-mobile-maui",
         }, ct);
+        return response.IsSuccessStatusCode;
     }
 
     private async Task<IReadOnlyList<T>> GetItemsAsync<T>(string path, CancellationToken ct)
@@ -126,9 +136,52 @@ public sealed class FcaApiClient
 
     private async Task<string?> GetRawAsync(string path, CancellationToken ct)
     {
-        var response = await _http.GetAsync(path, ct);
+        using var request = new HttpRequestMessage(HttpMethod.Get, path);
+        await AddAuthHeaderAsync(request);
+
+        var response = await _http.SendAsync(request, ct);
         if (!response.IsSuccessStatusCode)
             return null;
         return await response.Content.ReadAsStringAsync(ct);
+    }
+
+    private async Task SendAuthenticatedJsonAsync<T>(string path, T payload, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, path)
+        {
+            Content = JsonContent.Create(payload),
+        };
+        await AddAuthHeaderAsync(request);
+
+        var response = await _http.SendAsync(request, ct);
+        response.EnsureSuccessStatusCode();
+    }
+
+    private async Task AddAuthHeaderAsync(HttpRequestMessage request)
+    {
+        var token = await _store.GetAuthTokenAsync();
+        if (!string.IsNullOrWhiteSpace(token))
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+    }
+
+    private static string? ExtractAuthToken(JsonElement root)
+    {
+        foreach (var propertyName in new[] { "token", "accessToken", "authToken", "jwt", "sessionToken" })
+        {
+            if (root.TryGetProperty(propertyName, out var token) && token.ValueKind == JsonValueKind.String)
+                return token.GetString();
+        }
+
+        foreach (var propertyName in new[] { "session", "auth", "user" })
+        {
+            if (root.TryGetProperty(propertyName, out var nested) && nested.ValueKind == JsonValueKind.Object)
+            {
+                var token = ExtractAuthToken(nested);
+                if (!string.IsNullOrWhiteSpace(token))
+                    return token;
+            }
+        }
+
+        return null;
     }
 }
