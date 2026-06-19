@@ -59,7 +59,12 @@ public sealed class FcaApiClient
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;
         if (root.TryGetProperty("catalog", out var catalog))
-            return JsonSerializer.Deserialize<AcademySnapshot>(catalog.GetRawText(), JsonOptions);
+        {
+            return new AcademySnapshot
+            {
+                Catalog = JsonSerializer.Deserialize<AcademyCatalog>(catalog.GetRawText(), JsonOptions),
+            };
+        }
 
         return JsonSerializer.Deserialize<AcademySnapshot>(json, JsonOptions);
     }
