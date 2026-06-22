@@ -1,28 +1,12 @@
-using Fca.Mobile.Services;
+using Fca.Mobile.ViewModels;
 
 namespace Fca.Mobile.Pages;
 
 public partial class PlanRoomPage : ContentPage
 {
-    private readonly FcaApiClient _api;
-
-    public PlanRoomPage(FcaApiClient api)
+    public PlanRoomPage(PlanRoomViewModel viewModel)
     {
-        _api = api;
+        BindingContext = viewModel;
         InitializeComponent();
-    }
-
-    protected override async void OnAppearing()
-    {
-        base.OnAppearing();
-        await LoadAsync();
-    }
-
-    async Task LoadAsync() => DocList.ItemsSource = await _api.GetDocumentsAsync();
-
-    async void OnRefreshing(object sender, EventArgs e)
-    {
-        await LoadAsync();
-        RefreshHost.IsRefreshing = false;
     }
 }

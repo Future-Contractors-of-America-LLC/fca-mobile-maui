@@ -2,17 +2,21 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
-    <Color x:Key="Navy">#0F172A</Color>
-    <Color x:Key="Slate">#1E293B</Color>
     <Color x:Key="Blue">#2563EB</Color>
     <Color x:Key="BlueLight">#4F7CFF</Color>
     <Color x:Key="Gold">#D4A017</Color>
-    <Color x:Key="White">#FFFFFF</Color>
-    <Color x:Key="Muted">#64748B</Color>
-    <Color x:Key="Border">#E2E8F0</Color>
     <Color x:Key="Success">#16A34A</Color>
-    <Color x:Key="Background">#F8FAFC</Color>
-    <Color x:Key="Card">#FFFFFF</Color>
+    <Color x:Key="Danger">#DC2626</Color>
+    <Color x:Key="WarningBanner">#B45309</Color>
+
+    <AppThemeColor x:Key="Navy" Light="#0F172A" Dark="#F8FAFC" />
+    <AppThemeColor x:Key="Slate" Light="#1E293B" Dark="#334155" />
+    <AppThemeColor x:Key="White" Light="#FFFFFF" Dark="#FFFFFF" />
+    <AppThemeColor x:Key="Muted" Light="#64748B" Dark="#94A3B8" />
+    <AppThemeColor x:Key="Border" Light="#E2E8F0" Dark="#334155" />
+    <AppThemeColor x:Key="Background" Light="#F8FAFC" Dark="#0B1220" />
+    <AppThemeColor x:Key="Card" Light="#FFFFFF" Dark="#111827" />
+    <AppThemeColor x:Key="FieldBackground" Light="#FFFFFF" Dark="#1F2937" />
 
     <SolidColorBrush x:Key="NavyBrush" Color="{StaticResource Navy}" />
     <SolidColorBrush x:Key="BlueBrush" Color="{StaticResource Blue}" />

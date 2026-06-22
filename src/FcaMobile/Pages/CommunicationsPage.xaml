@@ -1,27 +1,42 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:vm="clr-namespace:Fca.Mobile.ViewModels"
              x:Class="Fca.Mobile.Pages.CommunicationsPage"
+             x:DataType="vm:CommunicationsViewModel"
              Title="Communications">
 
-    <Grid RowDefinitions="Auto,*" Padding="0">
+    <ContentPage.Behaviors>
+        <toolkit:EventToCommandBehavior EventName="Appearing" Command="{Binding InitializeCommand}" />
+    </ContentPage.Behaviors>
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
         <VerticalStackLayout Grid.Row="0" Padding="16" Spacing="8">
-            <Entry x:Name="SubjectEntry" Placeholder="Subject" Style="{StaticResource Field}" />
-            <Editor x:Name="MessageEditor" Placeholder="Message for your FCA success team" HeightRequest="100" />
-            <Picker x:Name="ChannelPicker" Title="Channel">
-                <Picker.Items>
-                    <x:String>email</x:String>
-                    <x:String>sms</x:String>
-                    <x:String>portal</x:String>
-                </Picker.Items>
-            </Picker>
-            <Button Text="Send message" Style="{StaticResource PrimaryButton}" Clicked="OnSendClicked" />
+            <Entry Placeholder="Subject" Style="{StaticResource Field}" Text="{Binding Subject}" />
+            <Editor Placeholder="Message for your FCA success team"
+                    HeightRequest="100"
+                    Style="{StaticResource EditorField}"
+                    Text="{Binding Message}" />
+            <Picker Title="Channel" ItemsSource="{Binding Channels}" SelectedItem="{Binding SelectedChannel}" />
+            <Button Text="Send message" Style="{StaticResource PrimaryButton}" Command="{Binding SendCommand}" />
         </VerticalStackLayout>
 
-        <RefreshView Grid.Row="1" x:Name="RefreshHost" Refreshing="OnRefreshing">
-            <CollectionView x:Name="MessageList" SelectionMode="None">
+        <Border Grid.Row="1" Style="{StaticResource OfflineBanner}" IsVisible="{Binding IsOffline}">
+            <Label Text="No internet connection" TextColor="{StaticResource White}" HorizontalTextAlignment="Center" FontSize="13" />
+        </Border>
+
+        <Label Grid.Row="2"
+               Style="{StaticResource ErrorLabel}"
+               Padding="16,0,16,8"
+               IsVisible="{Binding HasError}"
+               Text="{Binding ErrorMessage}" />
+
+        <RefreshView Grid.Row="3" IsRefreshing="{Binding IsRefreshing}" Command="{Binding RefreshCommand}">
+            <CollectionView ItemsSource="{Binding Messages}" SelectionMode="None">
                 <CollectionView.ItemTemplate>
-                    <DataTemplate>
+                    <DataTemplate x:DataType="models:PortalMessage"
+                                  xmlns:models="clr-namespace:Fca.Mobile.Models;assembly=FcaMobile.Core">
                         <Border Style="{StaticResource Card}" Margin="16,8">
                             <VerticalStackLayout Spacing="4">
                                 <Label Text="{Binding Subject}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
@@ -33,6 +48,13 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
         </RefreshView>
+
+        <ActivityIndicator Grid.RowSpan="4"
+                           IsRunning="{Binding IsBusy}"
+                           IsVisible="{Binding IsBusy}"
+                           Color="{StaticResource Blue}"
+                           VerticalOptions="Center"
+                           HorizontalOptions="Center" />
     </Grid>
 
 </ContentPage>

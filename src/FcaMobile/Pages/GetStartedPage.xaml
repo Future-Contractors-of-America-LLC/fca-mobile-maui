@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:vm="clr-namespace:Fca.Mobile.ViewModels"
              x:Class="Fca.Mobile.Pages.GetStartedPage"
+             x:DataType="vm:GetStartedViewModel"
              Title="Get Started">
 
     <ScrollView>
@@ -9,21 +12,23 @@
             <Label Text="Start your contractor workspace" Style="{StaticResource Headline}" />
             <Label Text="Tell us about your company. We will stand up your lead pipeline, job controls, and customer portal." Style="{StaticResource Subhead}" />
 
-            <Picker x:Name="PlanPicker" Title="Select plan">
-                <Picker.Items>
-                    <x:String>startup</x:String>
-                    <x:String>pilot</x:String>
-                    <x:String>enterprise</x:String>
-                </Picker.Items>
-            </Picker>
-            <Entry x:Name="CompanyEntry" Placeholder="Company name" Style="{StaticResource Field}" />
-            <Entry x:Name="NameEntry" Placeholder="Your name" Style="{StaticResource Field}" />
-            <Entry x:Name="EmailEntry" Placeholder="Work email" Keyboard="Email" Style="{StaticResource Field}" />
-            <Entry x:Name="PasswordEntry" Placeholder="Create password" IsPassword="True" Style="{StaticResource Field}" />
+            <Picker Title="Select plan"
+                    ItemsSource="{Binding Plans}"
+                    SelectedItem="{Binding SelectedPlan}" />
+            <Entry Placeholder="Company name" Style="{StaticResource Field}" Text="{Binding Company}" />
+            <Entry Placeholder="Your name" Style="{StaticResource Field}" Text="{Binding Name}" />
+            <Entry Placeholder="Work email" Keyboard="Email" Style="{StaticResource Field}" Text="{Binding Email}" />
+            <Entry Placeholder="Create password" IsPassword="True" Style="{StaticResource Field}" Text="{Binding Password}" />
 
-            <Label x:Name="StatusLabel" TextColor="#DC2626" IsVisible="False" />
+            <Border Style="{StaticResource OfflineBanner}" IsVisible="{Binding IsOffline}">
+                <Label Text="No internet connection" TextColor="{StaticResource White}" HorizontalTextAlignment="Center" FontSize="13" />
+            </Border>
 
-            <Button Text="Create Workspace" Style="{StaticResource PrimaryButton}" Clicked="OnSubmitClicked" />
+            <Label Style="{StaticResource ErrorLabel}" IsVisible="{Binding HasError}" Text="{Binding ErrorMessage}" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="{StaticResource Blue}" HorizontalOptions="Center" />
+
+            <Button Text="Create Workspace" Style="{StaticResource PrimaryButton}" Command="{Binding SubmitCommand}" />
         </VerticalStackLayout>
     </ScrollView>
 

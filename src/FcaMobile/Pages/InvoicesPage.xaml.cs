@@ -1,28 +1,12 @@
-using Fca.Mobile.Services;
+using Fca.Mobile.ViewModels;
 
 namespace Fca.Mobile.Pages;
 
 public partial class InvoicesPage : ContentPage
 {
-    private readonly FcaApiClient _api;
-
-    public InvoicesPage(FcaApiClient api)
+    public InvoicesPage(InvoicesViewModel viewModel)
     {
-        _api = api;
+        BindingContext = viewModel;
         InitializeComponent();
-    }
-
-    protected override async void OnAppearing()
-    {
-        base.OnAppearing();
-        await LoadAsync();
-    }
-
-    async Task LoadAsync() => InvoiceList.ItemsSource = await _api.GetInvoicesAsync();
-
-    async void OnRefreshing(object sender, EventArgs e)
-    {
-        await LoadAsync();
-        RefreshHost.IsRefreshing = false;
     }
 }

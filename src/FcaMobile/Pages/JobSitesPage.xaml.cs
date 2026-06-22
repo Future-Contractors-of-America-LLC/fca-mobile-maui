@@ -1,28 +1,12 @@
-using Fca.Mobile.Services;
+using Fca.Mobile.ViewModels;
 
 namespace Fca.Mobile.Pages;
 
 public partial class JobSitesPage : ContentPage
 {
-    private readonly FcaApiClient _api;
-
-    public JobSitesPage(FcaApiClient api)
+    public JobSitesPage(JobSitesViewModel viewModel)
     {
-        _api = api;
+        BindingContext = viewModel;
         InitializeComponent();
-    }
-
-    protected override async void OnAppearing()
-    {
-        base.OnAppearing();
-        await LoadAsync();
-    }
-
-    async Task LoadAsync() => JobList.ItemsSource = await _api.GetJobsAsync();
-
-    async void OnRefreshing(object sender, EventArgs e)
-    {
-        await LoadAsync();
-        RefreshHost.IsRefreshing = false;
     }
 }
