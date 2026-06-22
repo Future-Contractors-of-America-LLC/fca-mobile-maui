@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Fca.Mobile.Models;
 using Fca.Mobile.Services;
 
 namespace FcaMobile.Tests;
@@ -45,5 +46,34 @@ public class CustomerEntitlementsTests
         var enabled = CustomerEntitlements.GetEnabledCommsChannels(comms);
 
         Assert.Equal(["chat", "email", "teams", "conference", "lecture"], enabled);
+    }
+
+    [Fact]
+    public void SummarizeProducts_uses_portal_labels()
+    {
+        var products = new Dictionary<string, bool> { ["saas"] = true, ["lms"] = false, ["auricrux"] = true };
+
+        var summary = CustomerEntitlements.SummarizeProducts(products);
+
+        Assert.Contains("SaaS workspace", summary, StringComparison.Ordinal);
+        Assert.Contains("Auricrux guidance", summary, StringComparison.Ordinal);
+        Assert.DoesNotContain("Academy", summary, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ApplyToProfile_normalizes_stored_entitlements()
+    {
+        var profile = new CustomerProfile
+        {
+            EnabledProducts = new Dictionary<string, bool> { ["lms"] = false },
+            EnabledComms = new Dictionary<string, bool> { ["sms"] = false },
+        };
+
+        CustomerEntitlements.ApplyToProfile(profile);
+
+        Assert.False(profile.EnabledProducts!["lms"]);
+        Assert.True(profile.EnabledProducts["saas"]);
+        Assert.False(profile.EnabledComms!["sms"]);
+        Assert.True(profile.EnabledComms["email"]);
     }
 }

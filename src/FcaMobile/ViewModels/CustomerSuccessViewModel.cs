@@ -11,7 +11,7 @@ public partial class CustomerSuccessViewModel : ViewModelBase
     private readonly FcaApiClient _api;
     private readonly IHapticFeedbackService _haptics;
 
-    public IReadOnlyList<string> Priorities { get; } = ["normal", "urgent", "high"];
+    public IReadOnlyList<string> Priorities { get; } = ["normal", "high", "urgent"];
 
     public CustomerSuccessViewModel(
         FcaApiClient api,
@@ -35,7 +35,7 @@ public partial class CustomerSuccessViewModel : ViewModelBase
     private string detail = string.Empty;
 
     [ObservableProperty]
-    private string selectedPriority = "standard";
+    private string selectedPriority = "normal";
 
     [RelayCommand]
     private Task InitializeAsync() => LoadAsync();

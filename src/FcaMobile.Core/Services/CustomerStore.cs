@@ -9,6 +9,12 @@ public sealed class CustomerStore
     private const string PasswordKey = "fca_customer_password";
     private const string SessionKey = "fca_session_token";
 
+    private static readonly JsonSerializerOptions ProfileJsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    };
+
     private readonly IAppPreferences _preferences;
     private readonly ISecureCredentialStore _secureStore;
 
@@ -24,12 +30,16 @@ public sealed class CustomerStore
         if (string.IsNullOrWhiteSpace(json))
             return null;
 
-        return JsonSerializer.Deserialize<CustomerProfile>(json);
+        var profile = JsonSerializer.Deserialize<CustomerProfile>(json, ProfileJsonOptions);
+        if (profile is not null)
+            CustomerEntitlements.ApplyToProfile(profile);
+
+        return profile;
     }
 
     public async Task SaveAsync(CustomerProfile profile, string? password = null, string? sessionToken = null)
     {
-        _preferences.Set(ProfileKey, JsonSerializer.Serialize(profile));
+        _preferences.Set(ProfileKey, JsonSerializer.Serialize(profile, ProfileJsonOptions));
 
         if (!string.IsNullOrWhiteSpace(password))
             await _secureStore.SetAsync(PasswordKey, password).ConfigureAwait(false);
@@ -39,7 +49,7 @@ public sealed class CustomerStore
     }
 
     public void Save(CustomerProfile profile) =>
-        _preferences.Set(ProfileKey, JsonSerializer.Serialize(profile));
+        _preferences.Set(ProfileKey, JsonSerializer.Serialize(profile, ProfileJsonOptions));
 
     public Task<string?> GetPasswordAsync() => _secureStore.GetAsync(PasswordKey);
 

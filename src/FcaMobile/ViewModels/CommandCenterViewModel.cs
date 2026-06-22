@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Fca.Mobile.Models;
 using Fca.Mobile.Services;
 
 namespace Fca.Mobile.ViewModels;
@@ -95,14 +96,18 @@ public partial class CommandCenterViewModel : ViewModelBase
         var leads = await _api.GetLeadsAsync().ConfigureAwait(false);
         var jobs = await _api.GetJobsAsync().ConfigureAwait(false);
         var docs = await _api.GetDocumentsAsync().ConfigureAwait(false);
-        var training = await _api.GetTrainingAsync().ConfigureAwait(false);
 
-        if (!leads.IsSuccess || !jobs.IsSuccess || !docs.IsSuccess || !training.IsSuccess)
+        var lmsEnabled = CustomerEntitlements.IsProductEnabled(profile?.EnabledProducts, "lms");
+        ApiResult<AcademySnapshot>? training = null;
+        if (lmsEnabled)
+            training = await _api.GetTrainingAsync().ConfigureAwait(false);
+
+        if (!leads.IsSuccess || !jobs.IsSuccess || !docs.IsSuccess || (lmsEnabled && training is { IsSuccess: false }))
         {
             SetError(leads.ErrorMessage
                 ?? jobs.ErrorMessage
                 ?? docs.ErrorMessage
-                ?? training.ErrorMessage
+                ?? training?.ErrorMessage
                 ?? "Unable to load your command center.");
             return;
         }
@@ -110,6 +115,8 @@ public partial class CommandCenterViewModel : ViewModelBase
         LeadCount = leads.Value!.Count.ToString();
         JobCount = jobs.Value!.Count.ToString();
         DocCount = docs.Value!.Count.ToString();
-        TrainingCount = (training.Value?.Catalog?.Programs?.Count ?? 0).ToString();
+        TrainingCount = lmsEnabled
+            ? (training!.Value?.Catalog?.Programs?.Count ?? 0).ToString()
+            : "Pending";
     });
 }

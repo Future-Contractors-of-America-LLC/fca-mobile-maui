@@ -39,6 +39,23 @@ public class CustomerStoreTests
     }
 
     [Fact]
+    public void Load_normalizes_entitlements_on_deserialize()
+    {
+        var preferences = new FakePreferences();
+        preferences.Set(
+            "fca_customer_profile",
+            """{"email":"ops@summit.com","enabledProducts":{"lms":false},"enabledComms":{"sms":false}}""");
+        var store = new CustomerStore(preferences, new FakeSecureStore());
+
+        var profile = store.Load();
+
+        Assert.NotNull(profile);
+        Assert.False(profile!.EnabledProducts!["lms"]);
+        Assert.True(profile.EnabledProducts["saas"]);
+        Assert.False(profile.EnabledComms!["sms"]);
+    }
+
+    [Fact]
     public async Task ClearAsync_removes_profile_and_credentials()
     {
         var preferences = new FakePreferences();

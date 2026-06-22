@@ -9,6 +9,7 @@ public partial class AccountViewModel : ViewModelBase
     private readonly FcaApiClient _api;
     private readonly CustomerStore _store;
     private readonly FcaConfig _config;
+    private readonly IFcaApiHostResolver _hostResolver;
     private readonly IBiometricAuthService _biometrics;
     private readonly IShellNavigation _navigation;
     private readonly IHapticFeedbackService _haptics;
@@ -17,6 +18,7 @@ public partial class AccountViewModel : ViewModelBase
         FcaApiClient api,
         CustomerStore store,
         FcaConfig config,
+        IFcaApiHostResolver hostResolver,
         IBiometricAuthService biometrics,
         IConnectivityMonitor connectivity,
         IShellNavigation navigation,
@@ -26,6 +28,7 @@ public partial class AccountViewModel : ViewModelBase
         _api = api;
         _store = store;
         _config = config;
+        _hostResolver = hostResolver;
         _biometrics = biometrics;
         _navigation = navigation;
         _haptics = haptics;
@@ -40,6 +43,15 @@ public partial class AccountViewModel : ViewModelBase
 
     [ObservableProperty]
     private string plan = "Plan: startup";
+
+    [ObservableProperty]
+    private string productsSummary = string.Empty;
+
+    [ObservableProperty]
+    private string commsSummary = string.Empty;
+
+    [ObservableProperty]
+    private string apiHostLabel = string.Empty;
 
     [ObservableProperty]
     private string appVersion = string.Empty;
@@ -62,6 +74,19 @@ public partial class AccountViewModel : ViewModelBase
         Company = string.IsNullOrWhiteSpace(profile?.Company) ? "Company not set" : profile.Company;
         Email = string.IsNullOrWhiteSpace(profile?.Email) ? "Not signed in" : profile.Email;
         Plan = string.IsNullOrWhiteSpace(profile?.Plan) ? "Plan: startup" : $"Plan: {profile.Plan}";
+        ProductsSummary = CustomerEntitlements.SummarizeProducts(profile?.EnabledProducts);
+        CommsSummary = CustomerEntitlements.SummarizeComms(profile?.EnabledComms);
+        ApiHostLabel = $"API: {_hostResolver.ApiOrigin}";
+
+        if (_store.IsSignedIn)
+            await _api.SyncSessionAsync().ConfigureAwait(false);
+
+        profile = _store.Load();
+        if (profile is not null)
+        {
+            ProductsSummary = CustomerEntitlements.SummarizeProducts(profile.EnabledProducts);
+            CommsSummary = CustomerEntitlements.SummarizeComms(profile.EnabledComms);
+        }
 
         BiometricAvailable = await _biometrics.IsAvailableAsync().ConfigureAwait(false);
         BiometricLabel = DeviceInfo.Current.Platform == DevicePlatform.iOS

@@ -106,6 +106,9 @@ public sealed class FcaApiClient
             if (!response.IsSuccessStatusCode)
                 return ApiResult<bool>.Failure("Unable to verify your session.");
 
+            if (PortalResponse.IsEnvelopeFailure(json, out var sessionError))
+                return ApiResult<bool>.Failure(sessionError ?? "Unable to verify your session.");
+
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
@@ -172,6 +175,17 @@ public sealed class FcaApiClient
             return ApiResult<AcademySnapshot>.Success(new AcademySnapshot
             {
                 Catalog = JsonSerializer.Deserialize<AcademyCatalog>(catalog.GetRawText(), JsonOptions),
+            });
+        }
+
+        if (root.TryGetProperty("programs", out var programs))
+        {
+            return ApiResult<AcademySnapshot>.Success(new AcademySnapshot
+            {
+                Catalog = new AcademyCatalog
+                {
+                    Programs = JsonSerializer.Deserialize<List<AcademyProgram>>(programs.GetRawText(), JsonOptions),
+                },
             });
         }
 
@@ -354,8 +368,13 @@ public sealed class FcaApiClient
             await ApplySessionCookieAsync(bidRequest).ConfigureAwait(false);
 
             var bidResponse = await _http.SendAsync(bidRequest, ct).ConfigureAwait(false);
+            var bidJson = await bidResponse.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+
             if (!bidResponse.IsSuccessStatusCode)
                 return ApiResult.Failure("Unable to submit your workspace request. Try again in a moment.");
+
+            if (PortalResponse.IsMutationFailure(bidJson, out var bidError))
+                return ApiResult.Failure(bidError ?? "Unable to submit your workspace request. Try again in a moment.");
 
             await MirrorLeadIntakeAsync(profile, value, ct).ConfigureAwait(false);
 

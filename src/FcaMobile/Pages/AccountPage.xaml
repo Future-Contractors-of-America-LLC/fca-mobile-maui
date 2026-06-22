@@ -20,6 +20,8 @@
                     <Label Text="{Binding Company}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
                     <Label Text="{Binding Email}" Style="{StaticResource Subhead}" />
                     <Label Text="{Binding Plan}" TextColor="{StaticResource Blue}" />
+                    <Label Text="{Binding ProductsSummary}" Style="{StaticResource Subhead}" />
+                    <Label Text="{Binding CommsSummary}" Style="{StaticResource Subhead}" />
                 </VerticalStackLayout>
             </Border>
 
@@ -49,6 +51,10 @@
                    Style="{StaticResource Subhead}"
                    HorizontalTextAlignment="Center"
                    Margin="0,12,0,0" />
+            <Label Text="{Binding ApiHostLabel}"
+                   Style="{StaticResource Subhead}"
+                   FontSize="11"
+                   HorizontalTextAlignment="Center" />
         </VerticalStackLayout>
     </ScrollView>
 

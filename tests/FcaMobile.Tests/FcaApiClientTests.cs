@@ -148,6 +148,26 @@ public class FcaApiClientTests
         Assert.Equal("A-117", result.Value.Items![0].ProjectId);
     }
 
+    [Fact]
+    public async Task SyncSessionAsync_fails_when_ok_is_false()
+    {
+        var handler = new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(
+                """{ "ok": false, "error": "Invalid session", "authenticated": false }""",
+                Encoding.UTF8,
+                "application/json"),
+        });
+        var store = new CustomerStore(new FakePreferences(), new FakeSecureStore());
+        await store.SaveAsync(new CustomerProfile { Email = "ops@summit.com" }, sessionToken: "test-session");
+        var client = CreateClient(handler, store);
+
+        var result = await client.SyncSessionAsync();
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Invalid session", result.ErrorMessage);
+    }
+
     private static FcaApiClient CreateClient(HttpMessageHandler handler, CustomerStore store)
     {
         var httpClient = new HttpClient(handler)
