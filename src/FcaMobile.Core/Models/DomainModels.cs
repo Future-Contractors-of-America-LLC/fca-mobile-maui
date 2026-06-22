@@ -11,7 +11,7 @@ public sealed class CustomerProfile
     public string CustomerId { get; set; } = "";
     public string Role { get; set; } = "";
     public string WorkspaceLabel { get; set; } = "";
-    public List<string>? EnabledProducts { get; set; }
+    public Dictionary<string, bool>? EnabledProducts { get; set; }
     public Dictionary<string, bool>? EnabledComms { get; set; }
 
     [JsonIgnore]
@@ -72,6 +72,21 @@ public sealed class PortalInvoice
     public string? InvoiceName { get; set; }
     public string? Amount { get; set; }
     public string? Status { get; set; }
+}
+
+public sealed class BillingSummaryRecord
+{
+    public string? ProjectId { get; set; }
+    public string? ContractValue { get; set; }
+    public string? BilledToDate { get; set; }
+    public string? OutstandingToBill { get; set; }
+    public string? CollectionsStatus { get; set; }
+}
+
+public sealed class BillingSummarySnapshot
+{
+    public int Count { get; set; }
+    public List<BillingSummaryRecord>? Items { get; set; }
 }
 
 public sealed class SupportTicket

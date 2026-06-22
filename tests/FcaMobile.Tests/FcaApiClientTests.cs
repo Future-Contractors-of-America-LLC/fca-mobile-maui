@@ -24,8 +24,8 @@ public class FcaApiClientTests
                     "company": "Summit Builders",
                     "customerId": "TEN-001",
                     "selectedPlan": "startup",
-                    "enabledProducts": ["SaaS workspace"],
-                    "enabledComms": { "email": true, "chat": true }
+                    "enabledProducts": { "saas": true, "lms": false, "auricrux": true },
+                    "enabledComms": { "email": true, "chat": true, "sms": false }
                   }
                 }
                 """,
@@ -41,6 +41,9 @@ public class FcaApiClientTests
         Assert.Equal(sessionToken, await store.GetSessionTokenAsync());
         Assert.Equal("Summit Builders", store.Load()?.Company);
         Assert.Equal("startup", store.Load()?.Plan);
+        Assert.True(store.Load()?.EnabledProducts?["saas"]);
+        Assert.False(store.Load()?.EnabledProducts?["lms"]);
+        Assert.False(store.Load()?.EnabledComms?["sms"]);
     }
 
     [Fact]
@@ -97,6 +100,54 @@ public class FcaApiClientTests
         Assert.Contains("Unable to load data", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public async Task GetLeadsAsync_returns_failure_when_ok_is_false()
+    {
+        var handler = new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("""{ "ok": false, "error": "Session expired" }""", Encoding.UTF8, "application/json"),
+        });
+        var client = CreateClient(handler, new CustomerStore(new FakePreferences(), new FakeSecureStore()));
+
+        var result = await client.GetLeadsAsync();
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Session expired", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task GetBillingSummaryAsync_parses_billing_summary_shape()
+    {
+        var handler = new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(
+                """
+                {
+                  "ok": true,
+                  "count": 1,
+                  "items": [
+                    {
+                      "projectId": "A-117",
+                      "contractValue": "$148,000",
+                      "billedToDate": "$42,000",
+                      "outstandingToBill": "$28,000",
+                      "collectionsStatus": "Current"
+                    }
+                  ]
+                }
+                """,
+                Encoding.UTF8,
+                "application/json"),
+        });
+        var client = CreateClient(handler, new CustomerStore(new FakePreferences(), new FakeSecureStore()));
+
+        var result = await client.GetBillingSummaryAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, result.Value!.Count);
+        Assert.Equal("A-117", result.Value.Items![0].ProjectId);
+    }
+
     private static FcaApiClient CreateClient(HttpMessageHandler handler, CustomerStore store)
     {
         var httpClient = new HttpClient(handler)
@@ -107,8 +158,22 @@ public class FcaApiClientTests
         return new FcaApiClient(
             httpClient,
             store,
+            new FakeHostResolver(),
             new OnlineNetworkStatus(),
             NullLogger<FcaApiClient>.Instance);
+    }
+}
+
+internal sealed class FakeHostResolver : IFcaApiHostResolver
+{
+    public string ApiOrigin => "https://example.test";
+
+    public Uri ApiBaseUri => new("https://example.test/api/");
+
+    public Task EnsureResolvedAsync(HttpClient apiClient, CancellationToken ct = default)
+    {
+        apiClient.BaseAddress = ApiBaseUri;
+        return Task.CompletedTask;
     }
 }
 

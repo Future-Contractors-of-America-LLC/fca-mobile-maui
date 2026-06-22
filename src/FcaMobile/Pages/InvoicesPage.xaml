@@ -11,12 +11,18 @@
         <toolkit:EventToCommandBehavior EventName="Appearing" Command="{Binding InitializeCommand}" />
     </ContentPage.Behaviors>
 
-    <Grid RowDefinitions="Auto,Auto,*">
-        <Border Grid.Row="0" Style="{StaticResource OfflineBanner}" IsVisible="{Binding IsOffline}">
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
+        <Label Grid.Row="0"
+               Padding="16,16,16,0"
+               FontSize="14"
+               TextColor="{StaticResource Subhead}"
+               IsVisible="{Binding BillingSummaryLabel, Converter={StaticResource StringNotEmptyConverter}}"
+               Text="{Binding BillingSummaryLabel}" />
+        <Border Grid.Row="1" Style="{StaticResource OfflineBanner}" IsVisible="{Binding IsOffline}">
             <Label Text="No internet connection" TextColor="{StaticResource White}" HorizontalTextAlignment="Center" FontSize="13" />
         </Border>
-        <Label Grid.Row="1" Style="{StaticResource ErrorLabel}" Padding="16,8,16,0" IsVisible="{Binding HasError}" Text="{Binding ErrorMessage}" />
-        <RefreshView Grid.Row="2" IsRefreshing="{Binding IsRefreshing}" Command="{Binding RefreshCommand}">
+        <Label Grid.Row="2" Style="{StaticResource ErrorLabel}" Padding="16,8,16,0" IsVisible="{Binding HasError}" Text="{Binding ErrorMessage}" />
+        <RefreshView Grid.Row="3" IsRefreshing="{Binding IsRefreshing}" Command="{Binding RefreshCommand}">
             <CollectionView ItemsSource="{Binding Invoices}" SelectionMode="None">
                 <CollectionView.EmptyView>
                     <VerticalStackLayout Padding="24" Spacing="8">
@@ -40,7 +46,7 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
         </RefreshView>
-        <ActivityIndicator Grid.RowSpan="3" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="{StaticResource Blue}" VerticalOptions="Center" HorizontalOptions="Center" />
+        <ActivityIndicator Grid.RowSpan="4" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="{StaticResource Blue}" VerticalOptions="Center" HorizontalOptions="Center" />
     </Grid>
 
 </ContentPage>

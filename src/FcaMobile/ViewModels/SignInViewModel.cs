@@ -7,12 +7,14 @@ namespace Fca.Mobile.ViewModels;
 public partial class SignInViewModel : ViewModelBase
 {
     private readonly FcaApiClient _api;
+    private readonly MobileDeviceRegistrar _mobileRegistrar;
     private readonly IBiometricAuthService _biometrics;
     private readonly IShellNavigation _navigation;
     private readonly IHapticFeedbackService _haptics;
 
     public SignInViewModel(
         FcaApiClient api,
+        MobileDeviceRegistrar mobileRegistrar,
         IBiometricAuthService biometrics,
         IConnectivityMonitor connectivity,
         IShellNavigation navigation,
@@ -20,6 +22,7 @@ public partial class SignInViewModel : ViewModelBase
         : base(connectivity)
     {
         _api = api;
+        _mobileRegistrar = mobileRegistrar;
         _biometrics = biometrics;
         _navigation = navigation;
         _haptics = haptics;
@@ -58,6 +61,11 @@ public partial class SignInViewModel : ViewModelBase
             }
 
             _haptics.Success();
+            await _mobileRegistrar.RegisterIfNeededAsync(
+                DeviceInfo.Current.Platform.ToString(),
+                AppInfo.Current.VersionString,
+                AppInfo.Current.PackageName).ConfigureAwait(false);
+
             if (CanUseBiometrics && !_biometrics.IsEnabled)
             {
                 var enable = await Shell.Current.DisplayAlert(

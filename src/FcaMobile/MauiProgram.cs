@@ -24,11 +24,11 @@ public static class MauiProgram
         builder.Services.AddSingleton<IHapticFeedbackService, MauiHapticFeedbackService>();
         builder.Services.AddSingleton<IBiometricAuthService, MauiBiometricAuthService>();
         builder.Services.AddSingleton<CustomerStore>();
+        builder.Services.AddSingleton<IFcaApiHostResolver, FcaApiHostResolver>();
+        builder.Services.AddSingleton<MobileDeviceRegistrar>();
 
-        builder.Services.AddHttpClient<FcaApiClient>((sp, client) =>
+        builder.Services.AddHttpClient<FcaApiClient>((_, client) =>
         {
-            var config = sp.GetRequiredService<FcaConfig>();
-            client.BaseAddress = new Uri($"{config.PlatformBaseUrl.TrimEnd('/')}/api/");
             client.Timeout = TimeSpan.FromSeconds(30);
         });
 

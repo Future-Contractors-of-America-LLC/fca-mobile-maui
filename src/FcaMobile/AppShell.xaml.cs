@@ -7,11 +7,13 @@ public partial class AppShell : Shell
 {
     private readonly CustomerStore _store;
     private readonly FcaApiClient _api;
+    private readonly MobileDeviceRegistrar _mobileRegistrar;
     private readonly IBiometricAuthService _biometrics;
 
     public AppShell(
         CustomerStore store,
         FcaApiClient api,
+        MobileDeviceRegistrar mobileRegistrar,
         IBiometricAuthService biometrics,
         WelcomePage welcome,
         CommandCenterPage commandCenter,
@@ -22,6 +24,7 @@ public partial class AppShell : Shell
     {
         _store = store;
         _api = api;
+        _mobileRegistrar = mobileRegistrar;
         _biometrics = biometrics;
         InitializeComponent();
 
@@ -48,6 +51,8 @@ public partial class AppShell : Shell
     {
         Loaded -= OnShellLoaded;
 
+        await _api.EnsurePlatformReadyAsync().ConfigureAwait(false);
+
         if (_store.IsSignedIn)
         {
             if (_biometrics.IsEnabled)
@@ -67,6 +72,11 @@ public partial class AppShell : Shell
                 await GoToAsync("//welcome").ConfigureAwait(false);
                 return;
             }
+
+            await _mobileRegistrar.RegisterIfNeededAsync(
+                DeviceInfo.Current.Platform.ToString(),
+                AppInfo.Current.VersionString,
+                AppInfo.Current.PackageName).ConfigureAwait(false);
         }
 
         var route = _store.IsSignedIn ? "//main/command" : "//welcome";

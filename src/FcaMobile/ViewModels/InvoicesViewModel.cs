@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Fca.Mobile.Models;
 using Fca.Mobile.Services;
@@ -15,6 +16,9 @@ public partial class InvoicesViewModel : ViewModelBase
 
     public ObservableCollection<PortalInvoice> Invoices { get; } = new();
 
+    [ObservableProperty]
+    private string billingSummaryLabel = string.Empty;
+
     [RelayCommand]
     private Task InitializeAsync() => LoadAsync();
 
@@ -27,15 +31,27 @@ public partial class InvoicesViewModel : ViewModelBase
 
     private Task LoadAsync() => ExecuteAsync(async () =>
     {
-        var result = await _api.GetInvoicesAsync().ConfigureAwait(false);
-        if (!result.IsSuccess)
+        var invoices = await _api.GetInvoicesAsync().ConfigureAwait(false);
+        var billing = await _api.GetBillingSummaryAsync().ConfigureAwait(false);
+
+        if (!invoices.IsSuccess)
         {
-            SetError(result.ErrorMessage ?? "Unable to load invoices.");
+            SetError(invoices.ErrorMessage ?? "Unable to load invoices.");
             return;
         }
 
         Invoices.Clear();
-        foreach (var invoice in result.Value!)
+        foreach (var invoice in invoices.Value!)
             Invoices.Add(invoice);
+
+        if (billing.IsSuccess && billing.Value?.Count > 0)
+        {
+            BillingSummaryLabel =
+                $"{billing.Value.Count} construction billing record{(billing.Value.Count == 1 ? "" : "s")} on file";
+        }
+        else
+        {
+            BillingSummaryLabel = string.Empty;
+        }
     });
 }

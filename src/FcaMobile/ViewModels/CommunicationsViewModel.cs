@@ -9,19 +9,21 @@ namespace Fca.Mobile.ViewModels;
 public partial class CommunicationsViewModel : ViewModelBase
 {
     private readonly FcaApiClient _api;
+    private readonly CustomerStore _store;
     private readonly IHapticFeedbackService _haptics;
 
-    public IReadOnlyList<string> Channels { get; } = ["email", "sms", "chat"];
+    public ObservableCollection<string> Channels { get; } = new();
 
     public CommunicationsViewModel(
         FcaApiClient api,
+        CustomerStore store,
         IConnectivityMonitor connectivity,
         IHapticFeedbackService haptics)
         : base(connectivity)
     {
         _api = api;
+        _store = store;
         _haptics = haptics;
-        SelectedChannel = Channels[0];
     }
 
     public ObservableCollection<PortalMessage> Messages { get; } = new();
@@ -35,20 +37,28 @@ public partial class CommunicationsViewModel : ViewModelBase
     private string message = string.Empty;
 
     [ObservableProperty]
-    private string selectedChannel = "portal";
+    private string selectedChannel = "email";
 
     [RelayCommand]
-    private Task InitializeAsync() => LoadAsync();
+    private Task InitializeAsync()
+    {
+        ApplyEnabledChannels();
+        return LoadAsync();
+    }
 
     [RelayCommand]
     private async Task RefreshAsync()
     {
+        ApplyEnabledChannels();
         await LoadAsync().ConfigureAwait(false);
         IsRefreshing = false;
     }
 
     private bool CanSend() =>
-        !IsBusy && !string.IsNullOrWhiteSpace(Subject) && !string.IsNullOrWhiteSpace(Message);
+        !IsBusy
+        && !string.IsNullOrWhiteSpace(Subject)
+        && !string.IsNullOrWhiteSpace(Message)
+        && Channels.Contains(SelectedChannel);
 
     [RelayCommand(CanExecute = nameof(CanSend))]
     private async Task SendAsync()
@@ -83,6 +93,22 @@ public partial class CommunicationsViewModel : ViewModelBase
         foreach (var item in result.Value!)
             Messages.Add(item);
     });
+
+    private void ApplyEnabledChannels()
+    {
+        var profile = _store.Load();
+        var enabled = CustomerEntitlements.GetEnabledCommsChannels(profile?.EnabledComms);
+
+        Channels.Clear();
+        foreach (var channel in enabled)
+            Channels.Add(channel);
+
+        if (Channels.Count == 0)
+            Channels.Add("email");
+
+        if (!Channels.Contains(SelectedChannel))
+            SelectedChannel = Channels[0];
+    }
 
     partial void OnIsBusyChanged(bool value) => SendCommand.NotifyCanExecuteChanged();
 }

@@ -13,6 +13,7 @@ public sealed class FcaApiClient
 
     private readonly HttpClient _http;
     private readonly CustomerStore _store;
+    private readonly IFcaApiHostResolver _hostResolver;
     private readonly INetworkStatus _networkStatus;
     private readonly ILogger<FcaApiClient> _logger;
 
@@ -28,11 +29,13 @@ public sealed class FcaApiClient
     public FcaApiClient(
         HttpClient http,
         CustomerStore store,
+        IFcaApiHostResolver hostResolver,
         INetworkStatus networkStatus,
         ILogger<FcaApiClient> logger)
     {
         _http = http;
         _store = store;
+        _hostResolver = hostResolver;
         _networkStatus = networkStatus;
         _logger = logger;
     }
@@ -44,6 +47,8 @@ public sealed class FcaApiClient
 
         try
         {
+            await EnsureHostAsync(ct).ConfigureAwait(false);
+
             using var request = new HttpRequestMessage(HttpMethod.Post, "customer-login")
             {
                 Content = JsonContent.Create(new { email, password }),
@@ -80,6 +85,9 @@ public sealed class FcaApiClient
         }
     }
 
+    public Task EnsurePlatformReadyAsync(CancellationToken ct = default) =>
+        EnsureHostAsync(ct);
+
     public async Task<ApiResult<bool>> SyncSessionAsync(CancellationToken ct = default)
     {
         if (_networkStatus.IsOffline())
@@ -87,6 +95,8 @@ public sealed class FcaApiClient
 
         try
         {
+            await EnsureHostAsync(ct).ConfigureAwait(false);
+
             using var request = new HttpRequestMessage(HttpMethod.Get, "customer-session");
             await ApplySessionCookieAsync(request).ConfigureAwait(false);
 
@@ -122,6 +132,8 @@ public sealed class FcaApiClient
     {
         try
         {
+            await EnsureHostAsync(ct).ConfigureAwait(false);
+
             using var request = new HttpRequestMessage(HttpMethod.Post, "customer-logout");
             await ApplySessionCookieAsync(request).ConfigureAwait(false);
             await _http.SendAsync(request, ct).ConfigureAwait(false);
@@ -181,6 +193,8 @@ public sealed class FcaApiClient
 
         try
         {
+            await EnsureHostAsync(ct).ConfigureAwait(false);
+
             using var request = new HttpRequestMessage(HttpMethod.Post, "portal-messages")
             {
                 Content = JsonContent.Create(new { subject, message, channel }),
@@ -188,9 +202,15 @@ public sealed class FcaApiClient
             await ApplySessionCookieAsync(request).ConfigureAwait(false);
 
             var response = await _http.SendAsync(request, ct).ConfigureAwait(false);
-            return response.IsSuccessStatusCode
-                ? ApiResult.Success()
-                : ApiResult.Failure("Unable to send your message. Try again in a moment.");
+            var json = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+                return ApiResult.Failure("Unable to send your message. Try again in a moment.");
+
+            if (PortalResponse.IsMutationFailure(json, out var error))
+                return ApiResult.Failure(error ?? "Unable to send your message. Try again in a moment.");
+
+            return ApiResult.Success();
         }
         catch (Exception ex)
         {
@@ -201,6 +221,69 @@ public sealed class FcaApiClient
 
     public Task<ApiResult<IReadOnlyList<PortalInvoice>>> GetInvoicesAsync(CancellationToken ct = default) =>
         GetItemsAsync<PortalInvoice>("portal-invoices", ct);
+
+    public async Task<ApiResult<BillingSummarySnapshot>> GetBillingSummaryAsync(CancellationToken ct = default)
+    {
+        var jsonResult = await GetRawAsync("billing-summary", ct).ConfigureAwait(false);
+        if (!jsonResult.IsSuccess)
+            return ApiResult<BillingSummarySnapshot>.Failure(jsonResult.ErrorMessage!);
+
+        var json = jsonResult.Value!;
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        var snapshot = new BillingSummarySnapshot
+        {
+            Count = root.TryGetProperty("count", out var count) ? count.GetInt32() : 0,
+            Items = root.TryGetProperty("items", out var items)
+                ? JsonSerializer.Deserialize<List<BillingSummaryRecord>>(items.GetRawText(), JsonOptions)
+                : new List<BillingSummaryRecord>(),
+        };
+
+        return ApiResult<BillingSummarySnapshot>.Success(snapshot);
+    }
+
+    public async Task RegisterMobileDeviceAsync(
+        string platform,
+        string appVersion,
+        string bundleId,
+        CancellationToken ct = default)
+    {
+        if (_networkStatus.IsOffline())
+            return;
+
+        try
+        {
+            await EnsureHostAsync(ct).ConfigureAwait(false);
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, "mobile/register")
+            {
+                Content = JsonContent.Create(new
+                {
+                    platform,
+                    appVersion,
+                    bundleId,
+                    source = "fca-mobile-maui",
+                }),
+            };
+            await ApplySessionCookieAsync(request).ConfigureAwait(false);
+
+            var response = await _http.SendAsync(request, ct).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Mobile register returned status {StatusCode}", response.StatusCode);
+                return;
+            }
+
+            var json = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+            if (PortalResponse.IsMutationFailure(json, out var error))
+                _logger.LogWarning("Mobile register failed: {Error}", error);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Mobile device registration failed");
+        }
+    }
 
     public Task<ApiResult<IReadOnlyList<SupportTicket>>> GetSupportCasesAsync(CancellationToken ct = default) =>
         GetItemsAsync<SupportTicket>("support-tickets", ct);
@@ -216,6 +299,8 @@ public sealed class FcaApiClient
 
         try
         {
+            await EnsureHostAsync(ct).ConfigureAwait(false);
+
             using var request = new HttpRequestMessage(HttpMethod.Post, "support-tickets")
             {
                 Content = JsonContent.Create(new { subject, priority, detail }),
@@ -223,9 +308,15 @@ public sealed class FcaApiClient
             await ApplySessionCookieAsync(request).ConfigureAwait(false);
 
             var response = await _http.SendAsync(request, ct).ConfigureAwait(false);
-            return response.IsSuccessStatusCode
-                ? ApiResult.Success()
-                : ApiResult.Failure("Unable to open your support case. Try again in a moment.");
+            var json = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+                return ApiResult.Failure("Unable to open your support case. Try again in a moment.");
+
+            if (PortalResponse.IsMutationFailure(json, out var error))
+                return ApiResult.Failure(error ?? "Unable to open your support case. Try again in a moment.");
+
+            return ApiResult.Success();
         }
         catch (Exception ex)
         {
@@ -241,6 +332,8 @@ public sealed class FcaApiClient
 
         try
         {
+            await EnsureHostAsync(ct).ConfigureAwait(false);
+
             var value = PlanCatalog.IntakeValue(profile.Plan);
             var intakeId = Guid.NewGuid().ToString("N");
 
@@ -342,6 +435,8 @@ public sealed class FcaApiClient
 
         try
         {
+            await EnsureHostAsync(ct).ConfigureAwait(false);
+
             using var request = new HttpRequestMessage(HttpMethod.Get, path);
             await ApplySessionCookieAsync(request).ConfigureAwait(false);
 
@@ -354,6 +449,12 @@ public sealed class FcaApiClient
             }
 
             var content = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+            if (PortalResponse.IsEnvelopeFailure(content, out var error))
+            {
+                _logger.LogWarning("API request to {Path} returned ok=false: {Error}", path, error);
+                return ApiResult<string>.Failure(error ?? "Unable to load data from FCA right now. Pull to refresh and try again.");
+            }
+
             return ApiResult<string>.Success(content);
         }
         catch (Exception ex)
@@ -401,24 +502,17 @@ public sealed class FcaApiClient
             WorkspaceLabel = ReadString(account, "workspaceLabel") ?? "",
         };
 
-        if (account.TryGetProperty("enabledProducts", out var products) && products.ValueKind == JsonValueKind.Array)
-        {
-            profile.EnabledProducts = products.EnumerateArray()
-                .Select(item => item.GetString())
-                .Where(value => !string.IsNullOrWhiteSpace(value))
-                .Select(value => value!)
-                .ToList();
-        }
+        profile.EnabledProducts = CustomerEntitlements.NormalizeProducts(
+            account.TryGetProperty("enabledProducts", out var products) ? products : null);
 
-        if (account.TryGetProperty("enabledComms", out var comms) && comms.ValueKind == JsonValueKind.Object)
-        {
-            profile.EnabledComms = new Dictionary<string, bool>();
-            foreach (var property in comms.EnumerateObject())
-                profile.EnabledComms[property.Name] = property.Value.GetBoolean();
-        }
+        profile.EnabledComms = CustomerEntitlements.NormalizeComms(
+            account.TryGetProperty("enabledComms", out var comms) ? comms : null);
 
         return profile;
     }
+
+    private Task EnsureHostAsync(CancellationToken ct) =>
+        _hostResolver.EnsureResolvedAsync(_http, ct);
 
     private static string? ReadString(JsonElement element, string propertyName) =>
         element.TryGetProperty(propertyName, out var value) ? value.GetString() : null;
