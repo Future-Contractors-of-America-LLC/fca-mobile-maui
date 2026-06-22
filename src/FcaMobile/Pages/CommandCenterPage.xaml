@@ -34,13 +34,13 @@
                     <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="12">
                         <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource Card}">
                             <VerticalStackLayout>
-                                <Label Text="Open leads" Style="{StaticResource Subhead}" />
+                                <Label Text="Open bids" Style="{StaticResource Subhead}" />
                                 <Label Text="{Binding LeadCount}" FontSize="32" FontAttributes="Bold" TextColor="{StaticResource Blue}" />
                             </VerticalStackLayout>
                         </Border>
                         <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource Card}">
                             <VerticalStackLayout>
-                                <Label Text="Active jobs" Style="{StaticResource Subhead}" />
+                                <Label Text="Active projects" Style="{StaticResource Subhead}" />
                                 <Label Text="{Binding JobCount}" FontSize="32" FontAttributes="Bold" TextColor="{StaticResource Blue}" />
                             </VerticalStackLayout>
                         </Border>
@@ -58,7 +58,7 @@
                         </Border>
                     </Grid>
 
-                    <Button Text="Lead pipeline" Style="{StaticResource PrimaryButton}" Command="{Binding OpenLeadsCommand}" />
+                    <Button Text="Bid pipeline" Style="{StaticResource PrimaryButton}" Command="{Binding OpenLeadsCommand}" />
                     <Button Text="Plan room" Style="{StaticResource SecondaryButton}" Command="{Binding OpenPlanRoomCommand}" />
                     <Button Text="Billing &amp; invoices" Style="{StaticResource SecondaryButton}" Command="{Binding OpenInvoicesCommand}" />
                     <Button Text="Customer communications" Style="{StaticResource SecondaryButton}" Command="{Binding OpenCommunicationsCommand}" />

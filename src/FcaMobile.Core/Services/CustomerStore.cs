@@ -7,7 +7,7 @@ public sealed class CustomerStore
 {
     private const string ProfileKey = "fca_customer_profile";
     private const string PasswordKey = "fca_customer_password";
-    private const string TokenKey = "fca_customer_token";
+    private const string SessionKey = "fca_session_token";
 
     private readonly IAppPreferences _preferences;
     private readonly ISecureCredentialStore _secureStore;
@@ -27,15 +27,15 @@ public sealed class CustomerStore
         return JsonSerializer.Deserialize<CustomerProfile>(json);
     }
 
-    public async Task SaveAsync(CustomerProfile profile, string? password = null, string? token = null)
+    public async Task SaveAsync(CustomerProfile profile, string? password = null, string? sessionToken = null)
     {
         _preferences.Set(ProfileKey, JsonSerializer.Serialize(profile));
 
         if (!string.IsNullOrWhiteSpace(password))
             await _secureStore.SetAsync(PasswordKey, password).ConfigureAwait(false);
 
-        if (!string.IsNullOrWhiteSpace(token))
-            await _secureStore.SetAsync(TokenKey, token).ConfigureAwait(false);
+        if (!string.IsNullOrWhiteSpace(sessionToken))
+            await _secureStore.SetAsync(SessionKey, sessionToken).ConfigureAwait(false);
     }
 
     public void Save(CustomerProfile profile) =>
@@ -43,13 +43,13 @@ public sealed class CustomerStore
 
     public Task<string?> GetPasswordAsync() => _secureStore.GetAsync(PasswordKey);
 
-    public Task<string?> GetTokenAsync() => _secureStore.GetAsync(TokenKey);
+    public Task<string?> GetSessionTokenAsync() => _secureStore.GetAsync(SessionKey);
 
     public async Task ClearAsync()
     {
         _preferences.Remove(ProfileKey);
         await _secureStore.RemoveAsync(PasswordKey).ConfigureAwait(false);
-        await _secureStore.RemoveAsync(TokenKey).ConfigureAwait(false);
+        await _secureStore.RemoveAsync(SessionKey).ConfigureAwait(false);
     }
 
     public bool IsSignedIn => !string.IsNullOrWhiteSpace(Load()?.Email);

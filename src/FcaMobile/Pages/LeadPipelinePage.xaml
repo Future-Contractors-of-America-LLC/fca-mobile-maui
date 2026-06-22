@@ -5,7 +5,7 @@
              xmlns:vm="clr-namespace:Fca.Mobile.ViewModels"
              x:Class="Fca.Mobile.Pages.LeadPipelinePage"
              x:DataType="vm:LeadPipelineViewModel"
-             Title="Lead Pipeline">
+             Title="Bid Pipeline">
 
     <ContentPage.Behaviors>
         <toolkit:EventToCommandBehavior EventName="Appearing" Command="{Binding InitializeCommand}" />
@@ -28,8 +28,8 @@
             <CollectionView ItemsSource="{Binding Leads}" SelectionMode="None">
                 <CollectionView.EmptyView>
                     <VerticalStackLayout Padding="24" Spacing="8">
-                        <Label Text="No leads yet" Style="{StaticResource Headline}" FontSize="22" />
-                        <Label Text="New opportunities from your website, referrals, and field teams will appear here." Style="{StaticResource Subhead}" />
+                        <Label Text="No bids yet" Style="{StaticResource Headline}" FontSize="22" />
+                        <Label Text="Qualified opportunities from your website, referrals, and field teams will appear here." Style="{StaticResource Subhead}" />
                     </VerticalStackLayout>
                 </CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
@@ -37,12 +37,13 @@
                                   xmlns:models="clr-namespace:Fca.Mobile.Models;assembly=FcaMobile.Core">
                         <Border Style="{StaticResource Card}" Margin="16,8">
                             <VerticalStackLayout Spacing="4">
-                                <Label Text="{Binding ProjectName}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
-                                <Label Text="{Binding Company}" Style="{StaticResource Subhead}" />
+                                <Label Text="{Binding DisplayTitle}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
+                                <Label Text="{Binding ScopePackage}" Style="{StaticResource Subhead}" />
                                 <HorizontalStackLayout Spacing="12">
                                     <Label Text="{Binding Status}" TextColor="{StaticResource Blue}" />
-                                    <Label Text="{Binding Value, StringFormat='${0:N0}'}" TextColor="{StaticResource Muted}" />
+                                    <Label Text="{Binding Value}" TextColor="{StaticResource Muted}" />
                                 </HorizontalStackLayout>
+                                <Label Text="{Binding NextCommercialMove}" Style="{StaticResource Subhead}" />
                             </VerticalStackLayout>
                         </Border>
                     </DataTemplate>

@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Fca.Mobile.Models;
 using Microsoft.Extensions.Logging;
 
@@ -8,6 +9,8 @@ namespace Fca.Mobile.Services;
 
 public sealed class FcaApiClient
 {
+    private const string SessionCookieName = "fca_session";
+
     private readonly HttpClient _http;
     private readonly CustomerStore _store;
     private readonly INetworkStatus _networkStatus;
@@ -17,6 +20,10 @@ public sealed class FcaApiClient
     {
         PropertyNameCaseInsensitive = true,
     };
+
+    private static readonly Regex SessionCookieRegex = new(
+        $"{SessionCookieName}=([^;]+)",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     public FcaApiClient(
         HttpClient http,
@@ -37,23 +44,32 @@ public sealed class FcaApiClient
 
         try
         {
-            var response = await _http.PostAsJsonAsync("customer-login", new { email, password }, ct)
-                .ConfigureAwait(false);
+            using var request = new HttpRequestMessage(HttpMethod.Post, "customer-login")
+            {
+                Content = JsonContent.Create(new { email, password }),
+            };
+
+            var response = await _http.SendAsync(request, ct).ConfigureAwait(false);
+            var json = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
 
             if (!response.IsSuccessStatusCode)
                 return ApiResult<bool>.Failure("We could not verify those credentials. Check your email and password.");
 
-            var json = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
             if (!root.TryGetProperty("ok", out var ok) || !ok.GetBoolean())
                 return ApiResult<bool>.Failure("We could not verify those credentials. Check your email and password.");
 
-            var token = ExtractToken(root);
-            var profile = _store.Load() ?? new CustomerProfile();
-            profile.Email = email;
-            await _store.SaveAsync(profile, password, token).ConfigureAwait(false);
+            if (!root.TryGetProperty("account", out var accountElement) || accountElement.ValueKind != JsonValueKind.Object)
+                return ApiResult<bool>.Failure("Sign in succeeded but your workspace account was not returned. Try again.");
+
+            var sessionToken = ExtractSessionToken(response);
+            if (string.IsNullOrWhiteSpace(sessionToken))
+                return ApiResult<bool>.Failure("Sign in succeeded but no server session was issued. Try again.");
+
+            var profile = ParseAccountProfile(accountElement, email);
+            await _store.SaveAsync(profile, password, sessionToken).ConfigureAwait(false);
 
             return ApiResult<bool>.Success(true);
         }
@@ -64,29 +80,64 @@ public sealed class FcaApiClient
         }
     }
 
-    public async Task<ApiResult<IReadOnlyList<BidRecord>>> GetLeadsAsync(CancellationToken ct = default)
+    public async Task<ApiResult<bool>> SyncSessionAsync(CancellationToken ct = default)
     {
-        var jsonResult = await GetRawAsync("bids", ct).ConfigureAwait(false);
-        if (!jsonResult.IsSuccess)
-            return ApiResult<IReadOnlyList<BidRecord>>.Failure(jsonResult.ErrorMessage!);
+        if (_networkStatus.IsOffline())
+            return ApiResult<bool>.Failure("No network connection. Check your internet and try again.");
 
-        var json = jsonResult.Value!;
-        using var doc = JsonDocument.Parse(json);
-        if (doc.RootElement.ValueKind == JsonValueKind.Array)
+        try
         {
-            var items = JsonSerializer.Deserialize<List<BidRecord>>(json, JsonOptions) ?? new List<BidRecord>();
-            return ApiResult<IReadOnlyList<BidRecord>>.Success(items);
-        }
+            using var request = new HttpRequestMessage(HttpMethod.Get, "customer-session");
+            await ApplySessionCookieAsync(request).ConfigureAwait(false);
 
-        if (doc.RootElement.TryGetProperty("items", out var itemsElement))
+            var response = await _http.SendAsync(request, ct).ConfigureAwait(false);
+            var json = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+                return ApiResult<bool>.Failure("Unable to verify your session.");
+
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            if (!root.TryGetProperty("authenticated", out var authenticated) || !authenticated.GetBoolean())
+                return ApiResult<bool>.Failure("Your session has expired. Sign in again.");
+
+            if (!root.TryGetProperty("account", out var accountElement))
+                return ApiResult<bool>.Success(true);
+
+            var existing = _store.Load() ?? new CustomerProfile();
+            var profile = ParseAccountProfile(accountElement, existing.Email);
+            await _store.SaveAsync(profile).ConfigureAwait(false);
+
+            return ApiResult<bool>.Success(true);
+        }
+        catch (Exception ex)
         {
-            var items = JsonSerializer.Deserialize<List<BidRecord>>(itemsElement.GetRawText(), JsonOptions)
-                ?? new List<BidRecord>();
-            return ApiResult<IReadOnlyList<BidRecord>>.Success(items);
+            _logger.LogError(ex, "Session sync failed");
+            return ApiResult<bool>.Failure("Unable to verify your session.");
         }
-
-        return ApiResult<IReadOnlyList<BidRecord>>.Success(Array.Empty<BidRecord>());
     }
+
+    public async Task SignOutAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, "customer-logout");
+            await ApplySessionCookieAsync(request).ConfigureAwait(false);
+            await _http.SendAsync(request, ct).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Customer logout request failed");
+        }
+        finally
+        {
+            await _store.ClearAsync().ConfigureAwait(false);
+        }
+    }
+
+    public async Task<ApiResult<IReadOnlyList<BidRecord>>> GetLeadsAsync(CancellationToken ct = default) =>
+        await GetItemsAsync<BidRecord>("bids", ct).ConfigureAwait(false);
 
     public Task<ApiResult<IReadOnlyList<ProjectRecord>>> GetJobsAsync(CancellationToken ct = default) =>
         GetItemsAsync<ProjectRecord>("projects", ct);
@@ -130,10 +181,13 @@ public sealed class FcaApiClient
 
         try
         {
-            await ApplyAuthHeadersAsync().ConfigureAwait(false);
-            var response = await _http.PostAsJsonAsync("portal-messages", new { subject, message, channel }, ct)
-                .ConfigureAwait(false);
+            using var request = new HttpRequestMessage(HttpMethod.Post, "portal-messages")
+            {
+                Content = JsonContent.Create(new { subject, message, channel }),
+            };
+            await ApplySessionCookieAsync(request).ConfigureAwait(false);
 
+            var response = await _http.SendAsync(request, ct).ConfigureAwait(false);
             return response.IsSuccessStatusCode
                 ? ApiResult.Success()
                 : ApiResult.Failure("Unable to send your message. Try again in a moment.");
@@ -162,10 +216,13 @@ public sealed class FcaApiClient
 
         try
         {
-            await ApplyAuthHeadersAsync().ConfigureAwait(false);
-            var response = await _http.PostAsJsonAsync("support-tickets", new { subject, priority, detail }, ct)
-                .ConfigureAwait(false);
+            using var request = new HttpRequestMessage(HttpMethod.Post, "support-tickets")
+            {
+                Content = JsonContent.Create(new { subject, priority, detail }),
+            };
+            await ApplySessionCookieAsync(request).ConfigureAwait(false);
 
+            var response = await _http.SendAsync(request, ct).ConfigureAwait(false);
             return response.IsSuccessStatusCode
                 ? ApiResult.Success()
                 : ApiResult.Failure("Unable to open your support case. Try again in a moment.");
@@ -184,33 +241,73 @@ public sealed class FcaApiClient
 
         try
         {
-            var value = profile.Plan switch
+            var value = PlanCatalog.IntakeValue(profile.Plan);
+            var intakeId = Guid.NewGuid().ToString("N");
+
+            using var bidRequest = new HttpRequestMessage(HttpMethod.Post, "bids")
             {
-                "pilot" => 2500,
-                "startup" => 99,
-                _ => 249,
+                Content = JsonContent.Create(new
+                {
+                    company = profile.Company,
+                    projectName = $"{profile.Company} - {profile.Plan}",
+                    contactName = profile.Name,
+                    contactEmail = profile.Email,
+                    value,
+                    status = "new",
+                    intakeId,
+                    source = "fca-mobile-maui",
+                }),
             };
+            await ApplySessionCookieAsync(bidRequest).ConfigureAwait(false);
 
-            await ApplyAuthHeadersAsync().ConfigureAwait(false);
-            var response = await _http.PostAsJsonAsync("bids", new
-            {
-                company = profile.Company,
-                projectName = $"{profile.Company} - {profile.Plan}",
-                contactName = profile.Name,
-                contactEmail = profile.Email,
-                value,
-                status = "new",
-                source = "fca-mobile-maui",
-            }, ct).ConfigureAwait(false);
+            var bidResponse = await _http.SendAsync(bidRequest, ct).ConfigureAwait(false);
+            if (!bidResponse.IsSuccessStatusCode)
+                return ApiResult.Failure("Unable to submit your workspace request. Try again in a moment.");
 
-            return response.IsSuccessStatusCode
-                ? ApiResult.Success()
-                : ApiResult.Failure("Unable to submit your workspace request. Try again in a moment.");
+            await MirrorLeadIntakeAsync(profile, value, ct).ConfigureAwait(false);
+
+            return ApiResult.Success();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to submit lead intake for {Company}", profile.Company);
             return ApiResult.Failure("Unable to submit your workspace request. Check your connection and try again.");
+        }
+    }
+
+    private async Task MirrorLeadIntakeAsync(CustomerProfile profile, int value, CancellationToken ct)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, "leads")
+            {
+                Content = JsonContent.Create(new
+                {
+                    sourceChannel = "fca-mobile-maui",
+                    serviceLine = "general-construction",
+                    projectIntent = profile.Plan,
+                    sourceRoute = "mobile/getstarted",
+                    createdBy = "fca-mobile-maui",
+                    client = new
+                    {
+                        name = profile.Company,
+                        contactName = profile.Name,
+                        contactEmail = profile.Email,
+                    },
+                    site = new
+                    {
+                        name = $"{profile.Company} - {profile.Plan}",
+                        estimatedValue = value,
+                    },
+                    notes = $"Mobile intake plan: {profile.Plan}",
+                }),
+            };
+            await ApplySessionCookieAsync(request).ConfigureAwait(false);
+            await _http.SendAsync(request, ct).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Lead mirror failed for {Company}", profile.Company);
         }
     }
 
@@ -245,8 +342,10 @@ public sealed class FcaApiClient
 
         try
         {
-            await ApplyAuthHeadersAsync().ConfigureAwait(false);
-            var response = await _http.GetAsync(path, ct).ConfigureAwait(false);
+            using var request = new HttpRequestMessage(HttpMethod.Get, path);
+            await ApplySessionCookieAsync(request).ConfigureAwait(false);
+
+            var response = await _http.SendAsync(request, ct).ConfigureAwait(false);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -264,39 +363,63 @@ public sealed class FcaApiClient
         }
     }
 
-    private async Task ApplyAuthHeadersAsync()
+    private async Task ApplySessionCookieAsync(HttpRequestMessage request)
     {
-        _http.DefaultRequestHeaders.Authorization = null;
-
-        var token = await _store.GetTokenAsync().ConfigureAwait(false);
-        if (!string.IsNullOrWhiteSpace(token))
-        {
-            _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        var sessionToken = await _store.GetSessionTokenAsync().ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(sessionToken))
             return;
-        }
 
-        var profile = _store.Load();
-        var password = await _store.GetPasswordAsync().ConfigureAwait(false);
-        if (!string.IsNullOrWhiteSpace(profile?.Email) && !string.IsNullOrWhiteSpace(password))
-        {
-            _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-                "Basic",
-                Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{profile.Email}:{password}")));
-        }
+        request.Headers.Remove("Cookie");
+        request.Headers.TryAddWithoutValidation("Cookie", $"{SessionCookieName}={sessionToken}");
     }
 
-    private static string? ExtractToken(JsonElement root)
+    private static string? ExtractSessionToken(HttpResponseMessage response)
     {
-        foreach (var propertyName in new[] { "token", "accessToken", "sessionToken", "authToken" })
+        if (!response.Headers.TryGetValues("Set-Cookie", out var setCookies))
+            return null;
+
+        foreach (var cookie in setCookies)
         {
-            if (root.TryGetProperty(propertyName, out var tokenElement))
-            {
-                var value = tokenElement.GetString();
-                if (!string.IsNullOrWhiteSpace(value))
-                    return value;
-            }
+            var match = SessionCookieRegex.Match(cookie);
+            if (match.Success)
+                return match.Groups[1].Value;
         }
 
         return null;
     }
+
+    private static CustomerProfile ParseAccountProfile(JsonElement account, string fallbackEmail)
+    {
+        var profile = new CustomerProfile
+        {
+            Email = ReadString(account, "email") ?? fallbackEmail,
+            Company = ReadString(account, "company") ?? "",
+            Name = ReadString(account, "contactName") ?? ReadString(account, "name") ?? "",
+            Plan = ReadString(account, "selectedPlan") ?? "startup",
+            CustomerId = ReadString(account, "customerId") ?? "",
+            Role = ReadString(account, "role") ?? "",
+            WorkspaceLabel = ReadString(account, "workspaceLabel") ?? "",
+        };
+
+        if (account.TryGetProperty("enabledProducts", out var products) && products.ValueKind == JsonValueKind.Array)
+        {
+            profile.EnabledProducts = products.EnumerateArray()
+                .Select(item => item.GetString())
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Select(value => value!)
+                .ToList();
+        }
+
+        if (account.TryGetProperty("enabledComms", out var comms) && comms.ValueKind == JsonValueKind.Object)
+        {
+            profile.EnabledComms = new Dictionary<string, bool>();
+            foreach (var property in comms.EnumerateObject())
+                profile.EnabledComms[property.Name] = property.Value.GetBoolean();
+        }
+
+        return profile;
+    }
+
+    private static string? ReadString(JsonElement element, string propertyName) =>
+        element.TryGetProperty(propertyName, out var value) ? value.GetString() : null;
 }

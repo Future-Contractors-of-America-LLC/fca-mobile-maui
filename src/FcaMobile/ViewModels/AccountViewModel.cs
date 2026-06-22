@@ -6,6 +6,7 @@ namespace Fca.Mobile.ViewModels;
 
 public partial class AccountViewModel : ViewModelBase
 {
+    private readonly FcaApiClient _api;
     private readonly CustomerStore _store;
     private readonly FcaConfig _config;
     private readonly IBiometricAuthService _biometrics;
@@ -13,6 +14,7 @@ public partial class AccountViewModel : ViewModelBase
     private readonly IHapticFeedbackService _haptics;
 
     public AccountViewModel(
+        FcaApiClient api,
         CustomerStore store,
         FcaConfig config,
         IBiometricAuthService biometrics,
@@ -21,6 +23,7 @@ public partial class AccountViewModel : ViewModelBase
         IHapticFeedbackService haptics)
         : base(connectivity)
     {
+        _api = api;
         _store = store;
         _config = config;
         _biometrics = biometrics;
@@ -108,7 +111,7 @@ public partial class AccountViewModel : ViewModelBase
     private async Task SignOutAsync()
     {
         _haptics.Click();
-        await _store.ClearAsync().ConfigureAwait(false);
+        await _api.SignOutAsync().ConfigureAwait(false);
         await _navigation.GoToWelcomeAsync().ConfigureAwait(false);
     }
 

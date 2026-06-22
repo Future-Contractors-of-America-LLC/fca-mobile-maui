@@ -11,7 +11,7 @@ public partial class CommunicationsViewModel : ViewModelBase
     private readonly FcaApiClient _api;
     private readonly IHapticFeedbackService _haptics;
 
-    public IReadOnlyList<string> Channels { get; } = ["email", "sms", "portal"];
+    public IReadOnlyList<string> Channels { get; } = ["email", "sms", "chat"];
 
     public CommunicationsViewModel(
         FcaApiClient api,
@@ -21,7 +21,7 @@ public partial class CommunicationsViewModel : ViewModelBase
     {
         _api = api;
         _haptics = haptics;
-        SelectedChannel = Channels[2];
+        SelectedChannel = Channels[0];
     }
 
     public ObservableCollection<PortalMessage> Messages { get; } = new();

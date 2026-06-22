@@ -4,7 +4,8 @@ Native iOS and Android app for **Future Contractors of America**. Pure C# — no J
 
 Connects to the live FCA platform:
 
-- `https://auricrux-central.azurewebsites.net` (API)
+- `https://api.futurecontractorsofamerica.com` (API primary)
+- `https://auricrux-central.azurewebsites.net` (API fallback)
 - `https://futurecontractorsofamerica.com` (web / billing)
 
 ## Product surfaces

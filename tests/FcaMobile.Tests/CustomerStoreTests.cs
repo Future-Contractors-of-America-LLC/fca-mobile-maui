@@ -34,7 +34,7 @@ public class CustomerStoreTests
         Assert.Equal("ops@summit.com", loaded.Email);
         Assert.DoesNotContain("secret-password", preferences.Get("fca_customer_profile", string.Empty));
         Assert.Equal("secret-password", await secureStore.GetAsync("fca_customer_password"));
-        Assert.Equal("session-token", await secureStore.GetAsync("fca_customer_token"));
+        Assert.Equal("session-token", await secureStore.GetAsync("fca_session_token"));
         Assert.True(store.IsSignedIn);
     }
 
@@ -50,7 +50,7 @@ public class CustomerStoreTests
 
         Assert.Null(store.Load());
         Assert.Null(await secureStore.GetAsync("fca_customer_password"));
-        Assert.Null(await secureStore.GetAsync("fca_customer_token"));
+        Assert.Null(await secureStore.GetAsync("fca_session_token"));
         Assert.False(store.IsSignedIn);
     }
 }

@@ -5,7 +5,7 @@
              xmlns:vm="clr-namespace:Fca.Mobile.ViewModels"
              x:Class="Fca.Mobile.Pages.JobSitesPage"
              x:DataType="vm:JobSitesViewModel"
-             Title="Job Sites">
+             Title="Projects">
 
     <ContentPage.Behaviors>
         <toolkit:EventToCommandBehavior EventName="Appearing" Command="{Binding InitializeCommand}" />
@@ -20,7 +20,7 @@
             <CollectionView ItemsSource="{Binding Jobs}" SelectionMode="None">
                 <CollectionView.EmptyView>
                     <VerticalStackLayout Padding="24" Spacing="8">
-                        <Label Text="No active jobs" Style="{StaticResource Headline}" FontSize="22" />
+                        <Label Text="No active projects" Style="{StaticResource Headline}" FontSize="22" />
                         <Label Text="Awarded projects and field milestones will show here as your pipeline converts." Style="{StaticResource Subhead}" />
                     </VerticalStackLayout>
                 </CollectionView.EmptyView>
@@ -30,8 +30,9 @@
                         <Border Style="{StaticResource Card}" Margin="16,8">
                             <VerticalStackLayout Spacing="4">
                                 <Label Text="{Binding Name}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
+                                <Label Text="{Binding Customer}" Style="{StaticResource Subhead}" />
                                 <Label Text="{Binding Stage}" TextColor="{StaticResource Blue}" />
-                                <Label Text="{Binding NextStep}" Style="{StaticResource Subhead}" />
+                                <Label Text="{Binding NextAction}" Style="{StaticResource Subhead}" />
                             </VerticalStackLayout>
                         </Border>
                     </DataTemplate>

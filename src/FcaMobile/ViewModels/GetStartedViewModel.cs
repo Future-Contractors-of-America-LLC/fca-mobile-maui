@@ -13,7 +13,7 @@ public partial class GetStartedViewModel : ViewModelBase
     private readonly IShellNavigation _navigation;
     private readonly IHapticFeedbackService _haptics;
 
-    public IReadOnlyList<string> Plans { get; } = ["startup", "pilot", "enterprise"];
+    public IReadOnlyList<string> Plans { get; } = PlanCatalog.IntakePlans;
 
     public GetStartedViewModel(
         FcaApiClient api,
@@ -77,11 +77,18 @@ public partial class GetStartedViewModel : ViewModelBase
             await _store.SaveAsync(profile, profile.Password).ConfigureAwait(false);
             _haptics.Success();
 
-            var checkout = profile.Plan == "pilot"
-                ? _config.PilotCheckoutUrl
-                : string.IsNullOrWhiteSpace(_config.StartupCheckoutUrl)
-                    ? _config.WebsiteUrl + "/checkout"
-                    : _config.StartupCheckoutUrl;
+            var checkout = PlanCatalog.CheckoutUrl(_config, profile.Plan, profile.Email);
+
+            if (profile.Plan == "enterprise")
+            {
+                await Shell.Current.DisplayAlert(
+                    "Workspace requested",
+                    "Your company profile is saved. Our team will follow up for enterprise onboarding.",
+                    "Continue").ConfigureAwait(false);
+                await Launcher.OpenAsync(new Uri(checkout)).ConfigureAwait(false);
+                await _navigation.GoToWelcomeAsync().ConfigureAwait(false);
+                return;
+            }
 
             await Shell.Current.DisplayAlert(
                 "Workspace requested",

@@ -8,6 +8,11 @@ public sealed class CustomerProfile
     public string Company { get; set; } = "";
     public string Name { get; set; } = "";
     public string Email { get; set; } = "";
+    public string CustomerId { get; set; } = "";
+    public string Role { get; set; } = "";
+    public string WorkspaceLabel { get; set; } = "";
+    public List<string>? EnabledProducts { get; set; }
+    public Dictionary<string, bool>? EnabledComms { get; set; }
 
     [JsonIgnore]
     public string Password { get; set; } = "";
@@ -16,26 +21,41 @@ public sealed class CustomerProfile
 public sealed class BidRecord
 {
     public string? Id { get; set; }
-    public string? Company { get; set; }
-    public string? ProjectName { get; set; }
+    public string? Package { get; set; }
+    public string? Value { get; set; }
     public string? Status { get; set; }
-    public decimal? Value { get; set; }
+    public string? Blocker { get; set; }
+    public string? Estimator { get; set; }
+    public string? ScopePackage { get; set; }
+    public string? DueDate { get; set; }
+    public string? NextCommercialMove { get; set; }
+    public string? LinkedProjectId { get; set; }
+
+    [JsonIgnore]
+    public string DisplayTitle => string.IsNullOrWhiteSpace(Package) ? ScopePackage ?? "Bid package" : Package;
 }
 
 public sealed class ProjectRecord
 {
     public string? Id { get; set; }
     public string? Name { get; set; }
+    public string? Customer { get; set; }
     public string? Stage { get; set; }
-    public string? NextStep { get; set; }
+
+    [JsonPropertyName("nextAction")]
+    public string? NextAction { get; set; }
 }
 
 public sealed class FileRecord
 {
-    public string? Id { get; set; }
+    [JsonPropertyName("fileId")]
+    public string? FileId { get; set; }
+
     public string? Name { get; set; }
     public string? Category { get; set; }
     public string? Status { get; set; }
+    public string? Discipline { get; set; }
+    public string? VersionLabel { get; set; }
 }
 
 public sealed class PortalMessage
@@ -75,9 +95,11 @@ public sealed class AcademyCatalog
 
 public sealed class AcademyProgram
 {
+    public string? Key { get; set; }
     public string? Title { get; set; }
-    public string? Level { get; set; }
-    public int? LevelNumber { get; set; }
-    public string? Status { get; set; }
-    public string? Pathway { get; set; }
+    public string? Credential { get; set; }
+    public string? Audience { get; set; }
+    public string? Duration { get; set; }
+    public string? Format { get; set; }
+    public string? LinkedSurface { get; set; }
 }

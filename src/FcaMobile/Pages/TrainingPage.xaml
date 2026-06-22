@@ -30,8 +30,8 @@
                         <Border Style="{StaticResource Card}" Margin="16,8">
                             <VerticalStackLayout Spacing="4">
                                 <Label Text="{Binding Title}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
-                                <Label Text="{Binding Level}" TextColor="{StaticResource Blue}" />
-                                <Label Text="{Binding Status}" Style="{StaticResource Subhead}" />
+                                <Label Text="{Binding Credential}" TextColor="{StaticResource Blue}" />
+                                <Label Text="{Binding Duration}" Style="{StaticResource Subhead}" />
                             </VerticalStackLayout>
                         </Border>
                     </DataTemplate>

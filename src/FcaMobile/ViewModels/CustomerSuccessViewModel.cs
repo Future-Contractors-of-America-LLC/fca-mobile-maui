@@ -11,7 +11,7 @@ public partial class CustomerSuccessViewModel : ViewModelBase
     private readonly FcaApiClient _api;
     private readonly IHapticFeedbackService _haptics;
 
-    public IReadOnlyList<string> Priorities { get; } = ["standard", "urgent", "critical"];
+    public IReadOnlyList<string> Priorities { get; } = ["normal", "urgent", "high"];
 
     public CustomerSuccessViewModel(
         FcaApiClient api,

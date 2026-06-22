@@ -6,10 +6,12 @@ namespace Fca.Mobile;
 public partial class AppShell : Shell
 {
     private readonly CustomerStore _store;
+    private readonly FcaApiClient _api;
     private readonly IBiometricAuthService _biometrics;
 
     public AppShell(
         CustomerStore store,
+        FcaApiClient api,
         IBiometricAuthService biometrics,
         WelcomePage welcome,
         CommandCenterPage commandCenter,
@@ -19,6 +21,7 @@ public partial class AppShell : Shell
         AccountPage account)
     {
         _store = store;
+        _api = api;
         _biometrics = biometrics;
         InitializeComponent();
 
@@ -45,11 +48,22 @@ public partial class AppShell : Shell
     {
         Loaded -= OnShellLoaded;
 
-        if (_store.IsSignedIn && _biometrics.IsEnabled)
+        if (_store.IsSignedIn)
         {
-            var unlocked = await _biometrics.AuthenticateAsync("Unlock your FCA workspace.").ConfigureAwait(false);
-            if (!unlocked)
+            if (_biometrics.IsEnabled)
             {
+                var unlocked = await _biometrics.AuthenticateAsync("Unlock your FCA workspace.").ConfigureAwait(false);
+                if (!unlocked)
+                {
+                    await GoToAsync("//welcome").ConfigureAwait(false);
+                    return;
+                }
+            }
+
+            var session = await _api.SyncSessionAsync().ConfigureAwait(false);
+            if (!session.IsSuccess)
+            {
+                await _api.SignOutAsync().ConfigureAwait(false);
                 await GoToAsync("//welcome").ConfigureAwait(false);
                 return;
             }
