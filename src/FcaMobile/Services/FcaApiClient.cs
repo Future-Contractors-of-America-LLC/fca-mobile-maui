@@ -59,6 +59,38 @@ public sealed class FcaApiClient
         return new SignInResult(true, TryReadAccessToken(root));
     }
 
+    public async Task SignOutAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            using var request = await CreateRequestAsync<object>(HttpMethod.Post, "customer-logout", null, ct);
+            await _http.SendAsync(request, ct);
+        }
+        catch
+        {
+            // best-effort logout
+        }
+    }
+
+    public async Task<bool> HasActiveSessionAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            using var request = await CreateRequestAsync<object>(HttpMethod.Get, "customer-session", null, ct);
+            using var response = await _http.SendAsync(request, ct);
+            if (!response.IsSuccessStatusCode)
+                return false;
+
+            var json = await response.Content.ReadAsStringAsync(ct);
+            using var doc = JsonDocument.Parse(json);
+            return doc.RootElement.TryGetProperty("authenticated", out var authenticated) && authenticated.GetBoolean();
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     public async Task<IReadOnlyList<BidRecord>> GetLeadsAsync(CancellationToken ct = default)
     {
         var json = await GetRawAsync("bids", ct);
