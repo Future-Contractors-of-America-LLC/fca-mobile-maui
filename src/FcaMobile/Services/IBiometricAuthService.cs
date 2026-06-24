@@ -1,4 +1,5 @@
-using Plugin.Maui.Biometric;
+using Plugin.Fingerprint;
+using Plugin.Fingerprint.Abstractions;
 
 namespace Fca.Mobile.Services;
 
@@ -23,10 +24,7 @@ public sealed class MauiBiometricAuthService : IBiometricAuthService
     {
         try
         {
-            var status = await BiometricAuthenticationService.Default
-                .GetAuthenticationStatusAsync()
-                .ConfigureAwait(false);
-            return status == BiometricAuthenticationStatus.Available;
+            return await CrossFingerprint.Current.IsAvailableAsync().ConfigureAwait(false);
         }
         catch
         {
@@ -38,16 +36,11 @@ public sealed class MauiBiometricAuthService : IBiometricAuthService
     {
         try
         {
-            var result = await BiometricAuthenticationService.Default
-                .AuthenticateAsync(
-                    new AuthenticationRequest
-                    {
-                        Title = "FCA Contractor Command",
-                        Reason = reason,
-                    },
-                    CancellationToken.None)
+            var config = new AuthenticationRequestConfiguration("FCA Contractor Command", reason);
+            var result = await CrossFingerprint.Current
+                .AuthenticateAsync(config)
                 .ConfigureAwait(false);
-            return result.IsSuccessful;
+            return result.Authenticated;
         }
         catch
         {
