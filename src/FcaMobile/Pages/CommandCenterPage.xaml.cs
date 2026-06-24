@@ -1,3 +1,4 @@
+using Fca.Mobile.Models;
 using Fca.Mobile.Services;
 
 namespace Fca.Mobile.Pages;
@@ -62,4 +63,14 @@ public partial class CommandCenterPage : ContentPage
     async void OnInvoicesClicked(object sender, EventArgs e) => await Shell.Current.GoToAsync("invoices");
     async void OnCommsClicked(object sender, EventArgs e) => await Shell.Current.GoToAsync("communications");
     async void OnSupportClicked(object sender, EventArgs e) => await Shell.Current.GoToAsync("support");
+
+    async Task OpenPortalHandoffAsync(string portalPath)
+    {
+        var url = FcaConfig.Current.BuildPortalHandoffUrl(portalPath);
+        await Launcher.Default.OpenAsync(url);
+    }
+
+    async void OnPipelineHandoffClicked(object sender, EventArgs e) => await OpenPortalHandoffAsync("/portal/pipeline");
+    async void OnFieldHandoffClicked(object sender, EventArgs e) => await OpenPortalHandoffAsync("/portal/punch");
+    async void OnImmersiveHandoffClicked(object sender, EventArgs e) => await OpenPortalHandoffAsync("/portal/immersive");
 }

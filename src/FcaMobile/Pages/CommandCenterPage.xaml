@@ -43,6 +43,10 @@
                 <Button Text="Billing &amp; invoices" Style="{StaticResource SecondaryButton}" Clicked="OnInvoicesClicked" />
                 <Button Text="Customer communications" Style="{StaticResource SecondaryButton}" Clicked="OnCommsClicked" />
                 <Button Text="Customer success" Style="{StaticResource SecondaryButton}" Clicked="OnSupportClicked" />
+                <Label Text="Portal handoff (authenticated web surfaces)" Style="{StaticResource Subhead}" Margin="0,8,0,0" />
+                <Button Text="Commercial pipeline" Style="{StaticResource SecondaryButton}" Clicked="OnPipelineHandoffClicked" />
+                <Button Text="Field tasks &amp; punch" Style="{StaticResource SecondaryButton}" Clicked="OnFieldHandoffClicked" />
+                <Button Text="Immersive / VR lab" Style="{StaticResource SecondaryButton}" Clicked="OnImmersiveHandoffClicked" />
             </VerticalStackLayout>
         </ScrollView>
     </RefreshView>

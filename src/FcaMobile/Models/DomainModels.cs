@@ -76,3 +76,11 @@ public sealed class AcademyProgram
     public string? Status { get; set; }
     public string? Pathway { get; set; }
 }
+
+public sealed class FieldTaskRecord
+{
+    public string? Id { get; set; }
+    public string? Title { get; set; }
+    public string? Status { get; set; }
+    public string? ProjectId { get; set; }
+}

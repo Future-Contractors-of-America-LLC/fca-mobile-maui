@@ -1,3 +1,4 @@
+using Fca.Mobile.Models;
 using Fca.Mobile.Services;
 
 namespace Fca.Mobile.Pages;
@@ -39,6 +40,23 @@ public partial class LeadPipelinePage : ContentPage
         finally
         {
             RefreshHost.IsRefreshing = false;
+        }
+    }
+
+    async void OnQualifyClicked(object sender, EventArgs e)
+    {
+        if (sender is not BindableObject bindable || bindable.BindingContext is not BidRecord bid || string.IsNullOrWhiteSpace(bid.Id))
+            return;
+
+        try
+        {
+            await _api.QualifyLeadAsync(bid.Id);
+            await LoadAsync();
+            await DisplayAlert("Qualified", "Lead qualification recorded on Auricrux-Central.", "OK");
+        }
+        catch
+        {
+            await DisplayAlert("Unable to qualify", "Check your session and retry from the FCA portal if needed.", "OK");
         }
     }
 }

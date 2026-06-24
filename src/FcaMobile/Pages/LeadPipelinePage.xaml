@@ -15,13 +15,16 @@
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Border Style="{StaticResource Card}" Margin="16,8">
-                        <VerticalStackLayout Spacing="4">
+                        <VerticalStackLayout Spacing="8">
                             <Label Text="{Binding ProjectName}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
                             <Label Text="{Binding Company}" Style="{StaticResource Subhead}" />
                             <HorizontalStackLayout Spacing="12">
                                 <Label Text="{Binding Status}" TextColor="{StaticResource Blue}" />
                                 <Label Text="{Binding Value, StringFormat='${0:N0}'}" TextColor="{StaticResource Muted}" />
                             </HorizontalStackLayout>
+                            <Button Text="Qualify on FCA spine"
+                                    Clicked="OnQualifyClicked"
+                                    Style="{StaticResource PrimaryButton}" />
                         </VerticalStackLayout>
                     </Border>
                 </DataTemplate>

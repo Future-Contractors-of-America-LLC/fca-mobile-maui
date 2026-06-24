@@ -171,6 +171,41 @@ public sealed class FcaApiClient
         }, ct);
     }
 
+    public async Task QualifyLeadAsync(string bidId, CancellationToken ct = default)
+    {
+        await PatchAsync("bids", new
+        {
+            action = "update-qualification",
+            bidId,
+            updates = new
+            {
+                status = "Qualified",
+                score = "88/100",
+                checklist = new
+                {
+                    plansReceived = true,
+                    siteWalkComplete = true,
+                    budgetConfirmed = true,
+                    decisionMakerIdentified = true,
+                    tradeLevelingComplete = true,
+                    jurisdictionReviewed = true,
+                },
+            },
+            detail = "Mobile contractor qualified lead on FCA spine.",
+        }, ct);
+    }
+
+    public async Task<IReadOnlyList<FieldTaskRecord>> GetFieldTasksAsync(CancellationToken ct = default)
+        => await GetItemsAsync<FieldTaskRecord>("field-tasks", ct);
+
+    private async Task PatchAsync<T>(string path, T payload, CancellationToken ct)
+    {
+        using var request = await CreateRequestAsync(HttpMethod.Patch, path, payload, ct);
+        using var response = await _http.SendAsync(request, ct);
+        if (!response.IsSuccessStatusCode)
+            throw new FcaApiException(path, response.StatusCode);
+    }
+
     private async Task<IReadOnlyList<T>> GetItemsAsync<T>(string path, CancellationToken ct)
     {
         var json = await GetRawAsync(path, ct);
