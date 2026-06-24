@@ -15,6 +15,7 @@
                 </VerticalStackLayout>
             </Border>
 
+            <Button Text="Sign in with Microsoft" Style="{StaticResource SecondaryButton}" Clicked="OnMicrosoftSignInClicked" />
             <Button Text="Manage billing on web" Style="{StaticResource SecondaryButton}" Clicked="OnBillingClicked" />
             <Button Text="Sign out" Style="{StaticResource PrimaryButton}" BackgroundColor="{StaticResource Slate}" Clicked="OnSignOutClicked" />
             <Button Text="Return to welcome" Style="{StaticResource SecondaryButton}" Clicked="OnWelcomeClicked" />
