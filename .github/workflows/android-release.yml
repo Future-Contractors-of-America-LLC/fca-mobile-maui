@@ -194,6 +194,7 @@ jobs:
       - name: Play Store internal track
         if: steps.play.outputs.configured == 'true'
         uses: r0adkll/upload-google-play@v1
+        continue-on-error: true
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.futurecontractorsofamerica.mobile
