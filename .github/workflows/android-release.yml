@@ -118,8 +118,6 @@ jobs:
           $aabOut = Join-Path $root "fca-mobile-release.aab"
           Copy-Item $apk.FullName $apkOut -Force
           Copy-Item $aab.FullName $aabOut -Force
-          "apk_path=$apkOut" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          "aab_path=$aabOut" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           Write-Host "APK: $apkOut"
           Write-Host "AAB: $aabOut"
 
@@ -137,19 +135,28 @@ jobs:
           path: release-artifacts/fca-mobile-release.aab
           if-no-files-found: error
 
+  distribute:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: fca-mobile-release-apk
+          path: release-artifacts
+
       - name: Detect Firebase configuration
         id: firebase
-        shell: pwsh
         env:
           FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
         run: |
-          if ($env:FIREBASE_APP_ID -and $env:FIREBASE_SERVICE_ACCOUNT_JSON) {
-            "configured=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          } else {
-            "configured=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            Write-Host "::notice::FIREBASE_APP_ID or FIREBASE_SERVICE_ACCOUNT_JSON not set — APK artifact only."
-          }
+          if [ -n "$FIREBASE_APP_ID" ] && [ -n "$FIREBASE_SERVICE_ACCOUNT_JSON" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::FIREBASE_APP_ID or FIREBASE_SERVICE_ACCOUNT_JSON not set — skipping distribution."
+          fi
 
       - name: Firebase App Distribution
         if: steps.firebase.outputs.configured == 'true'
@@ -161,18 +168,27 @@ jobs:
           file: release-artifacts/fca-mobile-release.apk
           releaseNotes: "FCA Contractor Command release from ${{ github.sha }}"
 
+  play-upload:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download AAB artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: fca-mobile-release-aab
+          path: release-artifacts
+
       - name: Detect Play Console configuration
         id: play
-        shell: pwsh
         env:
           GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
         run: |
-          if ($env:GOOGLE_PLAY_SERVICE_ACCOUNT_JSON) {
-            "configured=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          } else {
-            "configured=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            Write-Host "::notice::GOOGLE_PLAY_SERVICE_ACCOUNT_JSON not set — AAB artifact only."
-          }
+          if [ -n "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::GOOGLE_PLAY_SERVICE_ACCOUNT_JSON not set — AAB artifact only."
+          fi
 
       - name: Play Store internal track
         if: steps.play.outputs.configured == 'true'
