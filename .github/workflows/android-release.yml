@@ -167,6 +167,7 @@ jobs:
           groups: internal
           file: release-artifacts/fca-mobile-release.apk
           releaseNotes: "FCA Contractor Command release from ${{ github.sha }}"
+        continue-on-error: true
 
   play-upload:
     needs: release

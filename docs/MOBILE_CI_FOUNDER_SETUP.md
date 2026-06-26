@@ -7,7 +7,7 @@ Complete these steps once before Firebase App Distribution and Play Store upload
 1. [Firebase Console](https://console.firebase.google.com/) → **Add project** → name: `fca-contractor-command`
 2. **Add app** → Android → package: `com.futurecontractorsofamerica.mobile`
 3. Skip `google-services.json` download (not required for App Distribution-only)
-4. **Build → App Distribution** → Get started → create tester group **`internal`** → add your Google account email
+4. **Build → App Distribution** → Get started → create tester group named exactly **`internal`** → add your Google account email
 5. Copy **Firebase App ID** (`1:…:android:…`) for GitHub secret `FIREBASE_APP_ID`
 6. [Google Cloud Console](https://console.cloud.google.com/) (same project) → **IAM → Service Accounts** → Create `github-actions-fca`
 7. Role: **Firebase App Distribution Admin**
