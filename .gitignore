@@ -20,4 +20,6 @@ Thumbs.db
 
 # Secrets
 *.pfx
+*.keystore
+*.jks
 appsettings.*.local.json

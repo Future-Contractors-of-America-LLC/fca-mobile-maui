@@ -1,0 +1,185 @@
+name: MAUI Android Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - ".github/workflows/android-release.yml"
+      - "FcaMobile.sln"
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.422
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: microsoft
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install MAUI workload
+        run: dotnet workload install maui
+
+      - name: Configure Android release signing
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        shell: pwsh
+        run: |
+          if (-not $env:ANDROID_KEYSTORE_BASE64) {
+            Write-Host "::notice::ANDROID_KEYSTORE_BASE64 not set — publish will use debug signing."
+            exit 0
+          }
+          $bytes = [Convert]::FromBase64String($env:ANDROID_KEYSTORE_BASE64)
+          $keystorePath = Join-Path $env:GITHUB_WORKSPACE "fca-mobile-release.keystore"
+          [IO.File]::WriteAllBytes($keystorePath, $bytes)
+          "KEYSTORE_PATH=$keystorePath" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Restore
+        run: dotnet restore FcaMobile.sln
+
+      - name: Publish signed Android APK
+        shell: pwsh
+        run: |
+          $publishArgs = @(
+            "publish", "src/FcaMobile/FcaMobile.csproj",
+            "-c", "Release",
+            "-f", "net8.0-android",
+            "-p:AndroidPackageFormat=apk"
+          )
+          if ($env:KEYSTORE_PATH) {
+            $publishArgs += @(
+              "-p:AndroidKeyStore=true",
+              "-p:AndroidSigningKeyStore=$env:KEYSTORE_PATH",
+              "-p:AndroidSigningStorePass=$env:ANDROID_KEYSTORE_PASSWORD",
+              "-p:AndroidSigningKeyAlias=$env:ANDROID_KEY_ALIAS",
+              "-p:AndroidSigningKeyPass=$env:ANDROID_KEY_PASSWORD"
+            )
+          }
+          dotnet @publishArgs
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - name: Publish signed Android AAB
+        shell: pwsh
+        run: |
+          $publishArgs = @(
+            "publish", "src/FcaMobile/FcaMobile.csproj",
+            "-c", "Release",
+            "-f", "net8.0-android",
+            "-p:AndroidPackageFormat=aab"
+          )
+          if ($env:KEYSTORE_PATH) {
+            $publishArgs += @(
+              "-p:AndroidKeyStore=true",
+              "-p:AndroidSigningKeyStore=$env:KEYSTORE_PATH",
+              "-p:AndroidSigningStorePass=$env:ANDROID_KEYSTORE_PASSWORD",
+              "-p:AndroidSigningKeyAlias=$env:ANDROID_KEY_ALIAS",
+              "-p:AndroidSigningKeyPass=$env:ANDROID_KEY_PASSWORD"
+            )
+          }
+          dotnet @publishArgs
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - name: Locate release artifacts
+        id: artifacts
+        shell: pwsh
+        run: |
+          $root = Join-Path $env:GITHUB_WORKSPACE "release-artifacts"
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+          $apk = Get-ChildItem -Path "src/FcaMobile/bin/Release/net8.0-android" -Recurse -Filter "*.apk" |
+            Sort-Object LastWriteTime -Descending |
+            Select-Object -First 1
+          $aab = Get-ChildItem -Path "src/FcaMobile/bin/Release/net8.0-android" -Recurse -Filter "*.aab" |
+            Sort-Object LastWriteTime -Descending |
+            Select-Object -First 1
+          if (-not $apk) { throw "No APK artifact found after publish." }
+          if (-not $aab) { throw "No AAB artifact found after publish." }
+          $apkOut = Join-Path $root "fca-mobile-release.apk"
+          $aabOut = Join-Path $root "fca-mobile-release.aab"
+          Copy-Item $apk.FullName $apkOut -Force
+          Copy-Item $aab.FullName $aabOut -Force
+          "apk_path=$apkOut" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "aab_path=$aabOut" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Write-Host "APK: $apkOut"
+          Write-Host "AAB: $aabOut"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fca-mobile-release-apk
+          path: release-artifacts/fca-mobile-release.apk
+          if-no-files-found: error
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fca-mobile-release-aab
+          path: release-artifacts/fca-mobile-release.aab
+          if-no-files-found: error
+
+      - name: Detect Firebase configuration
+        id: firebase
+        shell: pwsh
+        env:
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if ($env:FIREBASE_APP_ID -and $env:FIREBASE_SERVICE_ACCOUNT_JSON) {
+            "configured=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          } else {
+            "configured=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            Write-Host "::notice::FIREBASE_APP_ID or FIREBASE_SERVICE_ACCOUNT_JSON not set — APK artifact only."
+          }
+
+      - name: Firebase App Distribution
+        if: steps.firebase.outputs.configured == 'true'
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          groups: internal
+          file: release-artifacts/fca-mobile-release.apk
+          releaseNotes: "FCA Contractor Command release from ${{ github.sha }}"
+
+      - name: Detect Play Console configuration
+        id: play
+        shell: pwsh
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if ($env:GOOGLE_PLAY_SERVICE_ACCOUNT_JSON) {
+            "configured=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          } else {
+            "configured=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            Write-Host "::notice::GOOGLE_PLAY_SERVICE_ACCOUNT_JSON not set — AAB artifact only."
+          }
+
+      - name: Play Store internal track
+        if: steps.play.outputs.configured == 'true'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.futurecontractorsofamerica.mobile
+          releaseFiles: release-artifacts/fca-mobile-release.aab
+          track: internal
+          status: completed
