@@ -10,7 +10,31 @@ on:
       - "FcaMobile.sln"
 
 jobs:
+  play-status:
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.play.outputs.ready }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Probe Play Console API access
+        id: play
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          PACKAGE_NAME: com.futurecontractorsofamerica.mobile
+        run: |
+          pip install -q google-auth requests
+          python scripts/ci_probe_play_ready.py
+          if [ "$(grep '^ready=' "$GITHUB_OUTPUT" | tail -1 | cut -d= -f2)" != "true" ]; then
+            echo "::notice::Play Console not linked yet — APK + Firebase only until org verification completes."
+          fi
+
   release:
+    needs: play-status
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -77,6 +101,7 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
       - name: Publish signed Android AAB
+        if: needs.play-status.outputs.ready == 'true'
         shell: pwsh
         run: |
           $publishArgs = @(
@@ -113,13 +138,16 @@ jobs:
             Sort-Object LastWriteTime -Descending |
             Select-Object -First 1
           if (-not $apk) { throw "No APK artifact found after publish." }
-          if (-not $aab) { throw "No AAB artifact found after publish." }
           $apkOut = Join-Path $root "fca-mobile-release.apk"
-          $aabOut = Join-Path $root "fca-mobile-release.aab"
           Copy-Item $apk.FullName $apkOut -Force
-          Copy-Item $aab.FullName $aabOut -Force
           Write-Host "APK: $apkOut"
-          Write-Host "AAB: $aabOut"
+          if ($aab) {
+            $aabOut = Join-Path $root "fca-mobile-release.aab"
+            Copy-Item $aab.FullName $aabOut -Force
+            Write-Host "AAB: $aabOut"
+          } else {
+            Write-Host "::notice::AAB skipped — Play Console not linked yet."
+          }
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -129,6 +157,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload AAB artifact
+        if: needs.play-status.outputs.ready == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: fca-mobile-release-aab
@@ -170,7 +199,8 @@ jobs:
         continue-on-error: true
 
   play-upload:
-    needs: release
+    needs: [play-status, release]
+    if: needs.play-status.outputs.ready == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Download AAB artifact
@@ -179,20 +209,7 @@ jobs:
           name: fca-mobile-release-aab
           path: release-artifacts
 
-      - name: Detect Play Console configuration
-        id: play
-        env:
-          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-        run: |
-          if [ -n "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ]; then
-            echo "configured=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::GOOGLE_PLAY_SERVICE_ACCOUNT_JSON not set — AAB artifact only."
-          fi
-
       - name: Play Store internal track
-        if: steps.play.outputs.configured == 'true'
         uses: r0adkll/upload-google-play@v1
         continue-on-error: true
         with:
