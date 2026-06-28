@@ -1,18 +1,30 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:pages="clr-namespace:Fca.Mobile.Pages"
        x:Class="Fca.Mobile.AppShell"
        Shell.FlyoutBehavior="Disabled"
        Title="FCA Contractor Command">
 
-    <ShellContent x:Name="WelcomeShell" Route="welcome" />
+    <ShellContent Route="welcome"
+                  ContentTemplate="{DataTemplate pages:WelcomePage}" />
 
-    <TabBar x:Name="MainTabs" Route="main">
-        <ShellContent x:Name="CommandShell" Title="Command Center" Route="command" />
-        <ShellContent x:Name="LeadsShell" Title="Leads" Route="leads" />
-        <ShellContent x:Name="JobsShell" Title="Jobs" Route="jobs" />
-        <ShellContent x:Name="TrainingShell" Title="Training" Route="training" />
-        <ShellContent x:Name="AccountShell" Title="Account" Route="account" />
+    <TabBar Route="main">
+        <ShellContent Title="Command Center"
+                      Route="command"
+                      ContentTemplate="{DataTemplate pages:CommandCenterPage}" />
+        <ShellContent Title="Leads"
+                      Route="leads"
+                      ContentTemplate="{DataTemplate pages:LeadPipelinePage}" />
+        <ShellContent Title="Jobs"
+                      Route="jobs"
+                      ContentTemplate="{DataTemplate pages:JobSitesPage}" />
+        <ShellContent Title="Training"
+                      Route="training"
+                      ContentTemplate="{DataTemplate pages:TrainingPage}" />
+        <ShellContent Title="Account"
+                      Route="account"
+                      ContentTemplate="{DataTemplate pages:AccountPage}" />
     </TabBar>
 
 </Shell>

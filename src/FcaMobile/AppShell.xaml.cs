@@ -6,25 +6,12 @@ namespace Fca.Mobile;
 public partial class AppShell : Shell
 {
     private readonly CustomerStore _store;
+    private bool _isReady;
 
-    public AppShell(
-        CustomerStore store,
-        WelcomePage welcome,
-        CommandCenterPage commandCenter,
-        LeadPipelinePage leads,
-        JobSitesPage jobs,
-        TrainingPage training,
-        AccountPage account)
+    public AppShell(CustomerStore store)
     {
         _store = store;
         InitializeComponent();
-
-        WelcomeShell.Content = welcome;
-        CommandShell.Content = commandCenter;
-        LeadsShell.Content = leads;
-        JobsShell.Content = jobs;
-        TrainingShell.Content = training;
-        AccountShell.Content = account;
 
         Routing.RegisterRoute("signin", typeof(SignInPage));
         Routing.RegisterRoute("getstarted", typeof(GetStartedPage));
@@ -34,14 +21,18 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("communications", typeof(CommunicationsPage));
         Routing.RegisterRoute("support", typeof(CustomerSuccessPage));
 
-        CurrentItem = WelcomeShell;
+        Loaded += (_, _) =>
+        {
+            CurrentItem = Items[0];
+            _isReady = true;
+        };
     }
 
     protected override void OnNavigating(ShellNavigatingEventArgs args)
     {
         base.OnNavigating(args);
 
-        if (args.Source == ShellNavigationSource.ShellItemChanged)
+        if (!_isReady || args.Source == ShellNavigationSource.ShellItemChanged)
             return;
 
         var target = args.Target?.Location?.OriginalString ?? string.Empty;
