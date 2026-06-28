@@ -6,27 +6,23 @@
 
     <ScrollView>
         <VerticalStackLayout Padding="24" Spacing="16">
+            <Image Source="fca_hex_mark.png" HeightRequest="72" WidthRequest="72" HorizontalOptions="Start" />
             <Label Text="Plans built for contractor growth" Style="{StaticResource Headline}" />
             <Label Text="Every tier includes lead management, job tracking, plan room access, billing visibility, and workforce training." Style="{StaticResource Subhead}" />
 
-            <Border Style="{StaticResource Card}">
-                <VerticalStackLayout Spacing="6">
-                    <Label Text="Startup - $99/mo" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
-                    <Label Text="For emerging contractors winning their first commercial accounts." Style="{StaticResource Subhead}" />
-                </VerticalStackLayout>
-            </Border>
-            <Border Style="{StaticResource Card}">
-                <VerticalStackLayout Spacing="6">
-                    <Label Text="Pilot - $2,500" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
-                    <Label Text="White-glove onboarding for teams ready to standardize bids, jobs, and field communication." Style="{StaticResource Subhead}" />
-                </VerticalStackLayout>
-            </Border>
-            <Border Style="{StaticResource Card}">
-                <VerticalStackLayout Spacing="6">
-                    <Label Text="Enterprise - custom" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
-                    <Label Text="Multi-office rollouts with advanced controls, integrations, and dedicated success coverage." Style="{StaticResource Subhead}" />
-                </VerticalStackLayout>
-            </Border>
+            <CollectionView x:Name="PlanCards" SelectionMode="None">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                            <VerticalStackLayout Spacing="6">
+                                <Label Text="{Binding Name}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
+                                <Label Text="{Binding Price}" FontAttributes="Bold" TextColor="{StaticResource Gold}" />
+                                <Label Text="{Binding Detail}" Style="{StaticResource Subhead}" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
 
             <Button Text="Get Started" Style="{StaticResource PrimaryButton}" Clicked="OnGetStartedClicked" />
         </VerticalStackLayout>

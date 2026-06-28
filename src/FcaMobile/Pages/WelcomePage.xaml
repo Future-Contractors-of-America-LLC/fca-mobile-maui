@@ -6,6 +6,7 @@
 
     <ScrollView>
         <VerticalStackLayout Padding="24" Spacing="20">
+            <Image Source="fca_hex_mark.png" HeightRequest="88" WidthRequest="88" HorizontalOptions="Start" />
             <Label Text="FCA Contractor Command" Style="{StaticResource Headline}" />
             <Label Style="{StaticResource Subhead}"
                    Text="One mobile command center for leads, job sites, plan rooms, billing, and workforce training - built for commercial contractors competing at enterprise scale." />

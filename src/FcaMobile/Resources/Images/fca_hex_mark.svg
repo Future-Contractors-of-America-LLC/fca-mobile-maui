@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright (c) 2026 Future Contractors of America LLC. All rights reserved. -->
-<!-- FCA Hex Mark foreground layer for adaptive app icon. -->
-<svg width="1024" height="1024" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- FCA Hex Mark for in-app branding -->
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="fcaBlue" x1="40" y1="28" x2="212" y2="224" gradientUnits="userSpaceOnUse">
       <stop stop-color="#7AA5FF"/>

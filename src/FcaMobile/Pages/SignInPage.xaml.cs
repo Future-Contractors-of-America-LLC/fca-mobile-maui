@@ -35,14 +35,14 @@ public partial class SignInPage : ContentPage
         try
         {
             var result = await _api.SignInAsync(email, password);
-            if (!result.IsSuccessful)
+            if (!result.IsSuccessful || string.IsNullOrWhiteSpace(result.AccessToken))
             {
                 ShowStatus(result.ErrorMessage ?? "We could not verify those credentials. Check your email and password.");
                 return;
             }
 
-            await _store.SaveAccessTokenAsync(result.AccessToken);
             _store.Save(new CustomerProfile { Email = email });
+            await _store.SaveAccessTokenAsync(result.AccessToken);
             PasswordEntry.Text = "";
             await Shell.Current.GoToAsync("//main/command");
         }

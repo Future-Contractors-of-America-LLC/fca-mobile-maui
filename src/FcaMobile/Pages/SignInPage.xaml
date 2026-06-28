@@ -6,6 +6,7 @@
 
     <ScrollView>
         <VerticalStackLayout Padding="24" Spacing="16">
+            <Image Source="fca_hex_mark.png" HeightRequest="72" WidthRequest="72" HorizontalOptions="Start" />
             <Label Text="Welcome back" Style="{StaticResource Headline}" />
             <Label Text="Sign in to your FCA Contractor Command workspace." Style="{StaticResource Subhead}" />
 

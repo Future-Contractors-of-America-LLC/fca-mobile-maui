@@ -12,7 +12,12 @@
             <Picker x:Name="PlanPicker" Title="Select plan">
                 <Picker.Items>
                     <x:String>startup</x:String>
+                    <x:String>starter-team</x:String>
                     <x:String>pilot</x:String>
+                    <x:String>team</x:String>
+                    <x:String>operations</x:String>
+                    <x:String>growth</x:String>
+                    <x:String>scale</x:String>
                     <x:String>enterprise</x:String>
                 </Picker.Items>
             </Picker>
