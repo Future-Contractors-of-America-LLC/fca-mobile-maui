@@ -19,7 +19,7 @@ public sealed class FcaApiException : Exception
     public HttpStatusCode StatusCode { get; }
 }
 
-public sealed record SignInResult(bool IsSuccessful, string? AccessToken);
+public sealed record SignInResult(bool IsSuccessful, string? AccessToken, string? ErrorMessage);
 
 public sealed class FcaApiClient
 {
@@ -44,19 +44,34 @@ public sealed class FcaApiClient
     public async Task<SignInResult> SignInAsync(string email, string password, CancellationToken ct = default)
     {
         using var response = await _http.PostAsJsonAsync("customer-login", new { email, password }, ct);
-        if (!response.IsSuccessStatusCode)
-            return new SignInResult(false, null);
-
         var json = await response.Content.ReadAsStringAsync(ct);
         using var doc = TryParseJson(json);
         if (doc is null)
-            return new SignInResult(false, null);
+            return new SignInResult(false, null, "Sign in returned an invalid response.");
 
         var root = doc.RootElement;
-        if (root.TryGetProperty("ok", out var ok) && ok.ValueKind == JsonValueKind.False)
-            return new SignInResult(false, null);
+        if (!response.IsSuccessStatusCode || (root.TryGetProperty("ok", out var ok) && ok.ValueKind == JsonValueKind.False))
+        {
+            var error = root.TryGetProperty("error", out var errorNode) && errorNode.ValueKind == JsonValueKind.String
+                ? errorNode.GetString()
+                : null;
+            return new SignInResult(false, null, error ?? "We could not verify those credentials.");
+        }
 
-        return new SignInResult(true, TryReadAccessToken(root));
+        if (root.TryGetProperty("requiresVerification", out var requiresVerification)
+            && requiresVerification.ValueKind == JsonValueKind.True)
+        {
+            return new SignInResult(
+                false,
+                null,
+                "Email verification is required. Complete sign-in on the FCA website first, or ask your admin to enable mobile beta access.");
+        }
+
+        var token = TryReadAccessToken(root);
+        if (string.IsNullOrWhiteSpace(token))
+            return new SignInResult(false, null, "Sign in succeeded but no session token was returned.");
+
+        return new SignInResult(true, token, null);
     }
 
     public async Task SignOutAsync(CancellationToken ct = default)
@@ -256,7 +271,7 @@ public sealed class FcaApiClient
 
     private static string? TryReadAccessToken(JsonElement root)
     {
-        foreach (var propertyName in new[] { "accessToken", "token", "jwt" })
+        foreach (var propertyName in new[] { "sessionToken", "accessToken", "token", "jwt" })
         {
             if (root.TryGetProperty(propertyName, out var token) && token.ValueKind == JsonValueKind.String)
                 return token.GetString();

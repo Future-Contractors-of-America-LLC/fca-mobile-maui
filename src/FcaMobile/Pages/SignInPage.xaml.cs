@@ -37,7 +37,7 @@ public partial class SignInPage : ContentPage
             var result = await _api.SignInAsync(email, password);
             if (!result.IsSuccessful)
             {
-                ShowStatus("We could not verify those credentials. Check your email and password.");
+                ShowStatus(result.ErrorMessage ?? "We could not verify those credentials. Check your email and password.");
                 return;
             }
 
