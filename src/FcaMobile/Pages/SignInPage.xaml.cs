@@ -21,7 +21,7 @@ public partial class SignInPage : ContentPage
     {
         StatusLabel.IsVisible = false;
         var email = EmailEntry.Text?.Trim() ?? "";
-        var password = PasswordEntry.Text ?? "";
+        var password = PasswordEntry.Text?.Trim() ?? "";
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
         {
             StatusLabel.Text = "Enter your work email and password.";

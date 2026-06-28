@@ -19,7 +19,7 @@ public sealed class FcaApiException : Exception
     public HttpStatusCode StatusCode { get; }
 }
 
-public sealed record SignInResult(bool IsSuccessful, string? AccessToken, string? ErrorMessage);
+public sealed record SignInResult(bool IsSuccessful, string? AccessToken, string? ErrorMessage, int StatusCode);
 
 public sealed class FcaApiClient
 {
@@ -47,7 +47,12 @@ public sealed class FcaApiClient
         var json = await response.Content.ReadAsStringAsync(ct);
         using var doc = TryParseJson(json);
         if (doc is null)
-            return new SignInResult(false, null, "Sign in returned an invalid response.");
+        {
+            // #region agent log
+            AgentLog("H4", "sign-in invalid json", new { status = (int)response.StatusCode });
+            // #endregion
+            return new SignInResult(false, null, "Sign in returned an invalid response.", (int)response.StatusCode);
+        }
 
         var root = doc.RootElement;
         if (!response.IsSuccessStatusCode || (root.TryGetProperty("ok", out var ok) && ok.ValueKind == JsonValueKind.False))
@@ -55,23 +60,38 @@ public sealed class FcaApiClient
             var error = root.TryGetProperty("error", out var errorNode) && errorNode.ValueKind == JsonValueKind.String
                 ? errorNode.GetString()
                 : null;
-            return new SignInResult(false, null, error ?? "We could not verify those credentials.");
+            // #region agent log
+            AgentLog("H1", "sign-in rejected", new { status = (int)response.StatusCode, error });
+            // #endregion
+            return new SignInResult(false, null, error ?? "We could not verify those credentials.", (int)response.StatusCode);
         }
 
         if (root.TryGetProperty("requiresVerification", out var requiresVerification)
             && requiresVerification.ValueKind == JsonValueKind.True)
         {
+            // #region agent log
+            AgentLog("H3", "sign-in requires verification", new { status = (int)response.StatusCode });
+            // #endregion
             return new SignInResult(
                 false,
                 null,
-                "Email verification is required. Complete sign-in on the FCA website first, or ask your admin to enable mobile beta access.");
+                "Email verification is required. Complete sign-in on the FCA website first, or ask your admin to enable mobile beta access.",
+                (int)response.StatusCode);
         }
 
         var token = TryReadAccessToken(root);
         if (string.IsNullOrWhiteSpace(token))
-            return new SignInResult(false, null, "Sign in succeeded but no session token was returned.");
+        {
+            // #region agent log
+            AgentLog("H2", "sign-in missing session token", new { status = (int)response.StatusCode });
+            // #endregion
+            return new SignInResult(false, null, "Sign in succeeded but no session token was returned.", (int)response.StatusCode);
+        }
 
-        return new SignInResult(true, token, null);
+        // #region agent log
+        AgentLog("H2", "sign-in succeeded", new { status = (int)response.StatusCode, hasToken = true });
+        // #endregion
+        return new SignInResult(true, token, null, (int)response.StatusCode);
     }
 
     public async Task SignOutAsync(CancellationToken ct = default)
@@ -294,4 +314,25 @@ public sealed class FcaApiClient
             return null;
         }
     }
+
+    // #region agent log
+    private static void AgentLog(string hypothesisId, string message, object data)
+    {
+        System.Diagnostics.Debug.WriteLine($"[0210c8][{hypothesisId}] {message} {JsonSerializer.Serialize(data)}");
+        try
+        {
+            Preferences.Set("fca_debug_signin", JsonSerializer.Serialize(new
+            {
+                hypothesisId,
+                message,
+                data,
+                at = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            }));
+        }
+        catch
+        {
+            // Best-effort debug capture for device repro.
+        }
+    }
+    // #endregion
 }
