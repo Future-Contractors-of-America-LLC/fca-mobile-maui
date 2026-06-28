@@ -33,17 +33,33 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("invoices", typeof(InvoicesPage));
         Routing.RegisterRoute("communications", typeof(CommunicationsPage));
         Routing.RegisterRoute("support", typeof(CustomerSuccessPage));
+
+        CurrentItem = WelcomeShell;
     }
 
     protected override void OnNavigating(ShellNavigatingEventArgs args)
     {
         base.OnNavigating(args);
 
-        if (_store.IsSignedIn || !IsProtectedRoute(args.Target.Location.OriginalString))
+        if (args.Source == ShellNavigationSource.ShellItemChanged)
+            return;
+
+        var target = args.Target?.Location?.OriginalString ?? string.Empty;
+        if (_store.IsSignedIn || !IsProtectedRoute(target))
             return;
 
         args.Cancel();
-        Dispatcher.Dispatch(async () => await GoToAsync("//welcome"));
+        Dispatcher.Dispatch(async () =>
+        {
+            try
+            {
+                await GoToAsync("//welcome");
+            }
+            catch
+            {
+                // Ignore re-entrant navigation during shell bootstrap.
+            }
+        });
     }
 
     private static bool IsProtectedRoute(string route)

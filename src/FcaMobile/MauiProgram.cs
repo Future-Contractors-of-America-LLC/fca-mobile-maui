@@ -7,6 +7,11 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            System.Diagnostics.Debug.WriteLine($"Unhandled: {e.ExceptionObject}");
+        };
+
         var builder = MauiApp.CreateBuilder();
         builder.UseMauiApp<App>();
 
