@@ -16,6 +16,7 @@ public static class MauiProgram
         builder.UseMauiApp<App>();
 
         builder.Services.AddSingleton(FcaConfig.Current);
+        builder.Services.AddSingleton(FcaMediaConfig.Current);
         builder.Services.AddSingleton<CustomerStore>();
         builder.Services.AddSingleton<FcaApiClient>();
 
