@@ -49,8 +49,8 @@ public partial class SignInPage : ContentPage
         VerificationPanel.IsVisible = false;
         _pendingChallengeId = null;
 
-        var email = EmailEntry.Text?.Trim() ?? "";
-        var password = PasswordEntry.Text ?? "";
+        var email = EmailEntry.Text?.Trim().ToLowerInvariant() ?? "";
+        var password = PasswordEntry.Text?.Trim() ?? "";
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
         {
             ShowStatus("Enter your work email and password.");
