@@ -4,6 +4,8 @@ public sealed class FcaConfig
 {
     public string PlatformBaseUrl { get; init; } = "https://auricrux-central.azurewebsites.net";
     public string WebsiteUrl { get; init; } = "https://futurecontractorsofamerica.com";
+    public string LoginUrl { get; init; } = "https://futurecontractorsofamerica.com/login";
+    public string ForgotPasswordUrl { get; init; } = "https://futurecontractorsofamerica.com/login?forgot=1";
     public string PilotCheckoutUrl { get; init; } = "https://futurecontractorsofamerica.com/checkout?plan=pilot";
     public string StartupCheckoutUrl { get; init; } = "";
 

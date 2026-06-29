@@ -51,9 +51,7 @@ public sealed class CustomerStore
     }
 
     public bool IsSignedIn =>
-        Preferences.Get(SignedInKey, false) ||
-        !string.IsNullOrWhiteSpace(Preferences.Get(AccessTokenKey, string.Empty)) ||
-        !string.IsNullOrWhiteSpace(Load()?.Email);
+        !string.IsNullOrWhiteSpace(Preferences.Get(AccessTokenKey, string.Empty));
 
     public async Task SaveAccessTokenAsync(string? token)
     {

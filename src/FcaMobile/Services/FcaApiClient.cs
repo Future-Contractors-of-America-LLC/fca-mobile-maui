@@ -19,7 +19,14 @@ public sealed class FcaApiException : Exception
     public HttpStatusCode StatusCode { get; }
 }
 
-public sealed record SignInResult(bool IsSuccessful, string? AccessToken, string? ErrorMessage, int StatusCode);
+public sealed record SignInResult(
+    bool IsSuccessful,
+    string? AccessToken,
+    string? ErrorMessage,
+    int StatusCode,
+    bool RequiresVerification = false,
+    string? ChallengeId = null,
+    string? MaskedEmail = null);
 
 public sealed class FcaApiClient
 {
@@ -69,14 +76,23 @@ public sealed class FcaApiClient
         if (root.TryGetProperty("requiresVerification", out var requiresVerification)
             && requiresVerification.ValueKind == JsonValueKind.True)
         {
+            var challengeId = root.TryGetProperty("challengeId", out var cid) && cid.ValueKind == JsonValueKind.String
+                ? cid.GetString()
+                : null;
+            var maskedEmail = root.TryGetProperty("maskedEmail", out var masked) && masked.ValueKind == JsonValueKind.String
+                ? masked.GetString()
+                : null;
             // #region agent log
-            AgentLog("H3", "sign-in requires verification", new { status = (int)response.StatusCode });
+            AgentLog("H3", "sign-in requires verification", new { status = (int)response.StatusCode, challengeId });
             // #endregion
             return new SignInResult(
                 false,
                 null,
-                "Email verification is required. Complete sign-in on the FCA website first, or ask your admin to enable mobile beta access.",
-                (int)response.StatusCode);
+                null,
+                (int)response.StatusCode,
+                RequiresVerification: true,
+                ChallengeId: challengeId,
+                MaskedEmail: maskedEmail);
         }
 
         var token = TryReadAccessToken(root);
@@ -91,6 +107,30 @@ public sealed class FcaApiClient
         // #region agent log
         AgentLog("H2", "sign-in succeeded", new { status = (int)response.StatusCode, hasToken = true });
         // #endregion
+        return new SignInResult(true, token, null, (int)response.StatusCode);
+    }
+
+    public async Task<SignInResult> VerifySignInAsync(string challengeId, string code, CancellationToken ct = default)
+    {
+        using var response = await _http.PostAsJsonAsync("customer-verify", new { challengeId, code }, ct);
+        var json = await response.Content.ReadAsStringAsync(ct);
+        using var doc = TryParseJson(json);
+        if (doc is null)
+            return new SignInResult(false, null, "Verification returned an invalid response.", (int)response.StatusCode);
+
+        var root = doc.RootElement;
+        if (!response.IsSuccessStatusCode || (root.TryGetProperty("ok", out var ok) && ok.ValueKind == JsonValueKind.False))
+        {
+            var error = root.TryGetProperty("error", out var errorNode) && errorNode.ValueKind == JsonValueKind.String
+                ? errorNode.GetString()
+                : "Invalid or expired verification code.";
+            return new SignInResult(false, null, error, (int)response.StatusCode);
+        }
+
+        var token = TryReadAccessToken(root);
+        if (string.IsNullOrWhiteSpace(token))
+            return new SignInResult(false, null, "Verification succeeded but no session token was returned.", (int)response.StatusCode);
+
         return new SignInResult(true, token, null, (int)response.StatusCode);
     }
 

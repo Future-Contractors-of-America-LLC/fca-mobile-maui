@@ -11,7 +11,44 @@
             <Label Text="Sign in to your FCA Contractor Command workspace." Style="{StaticResource Subhead}" />
 
             <Entry x:Name="EmailEntry" Placeholder="Work email" Keyboard="Email" Style="{StaticResource Field}" />
-            <Entry x:Name="PasswordEntry" Placeholder="Password" IsPassword="True" Style="{StaticResource Field}" />
+
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Entry x:Name="PasswordEntry"
+                       Grid.Column="0"
+                       Placeholder="Password"
+                       IsPassword="True"
+                       Style="{StaticResource Field}" />
+                <Button x:Name="TogglePasswordButton"
+                        Grid.Column="1"
+                        Text="Show"
+                        Style="{StaticResource SecondaryButton}"
+                        Padding="12,0"
+                        Clicked="OnTogglePasswordClicked" />
+            </Grid>
+
+            <HorizontalStackLayout Spacing="8">
+                <Button Text="Forgot password?"
+                        Style="{StaticResource SecondaryButton}"
+                        BackgroundColor="Transparent"
+                        TextColor="#2563EB"
+                        Padding="0"
+                        Clicked="OnForgotPasswordClicked" />
+            </HorizontalStackLayout>
+
+            <VerticalStackLayout x:Name="VerificationPanel" IsVisible="False" Spacing="8">
+                <Label x:Name="VerificationLabel"
+                       Text="Enter the 6-digit code sent to your email."
+                       Style="{StaticResource Subhead}" />
+                <Entry x:Name="VerificationCodeEntry"
+                       Placeholder="Verification code"
+                       Keyboard="Numeric"
+                       MaxLength="6"
+                       Style="{StaticResource Field}" />
+                <Button x:Name="VerifyButton"
+                        Text="Verify and sign in"
+                        Style="{StaticResource PrimaryButton}"
+                        Clicked="OnVerifyClicked" />
+            </VerticalStackLayout>
 
             <Label x:Name="StatusLabel" TextColor="#DC2626" IsVisible="False" />
 
