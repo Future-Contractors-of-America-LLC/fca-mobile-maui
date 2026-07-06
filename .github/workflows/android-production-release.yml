@@ -1,0 +1,130 @@
+name: MAUI Android Production Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  play-status:
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.play.outputs.ready }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Probe Play Console API access
+        id: play
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          PACKAGE_NAME: com.futurecontractorsofamerica.mobile
+        run: |
+          pip install -q google-auth requests
+          python scripts/ci_probe_play_ready.py
+          if [ "$(grep '^ready=' "$GITHUB_OUTPUT" | tail -1 | cut -d= -f2)" != "true" ]; then
+            echo "::error::Play Console API not ready; cannot proceed to production upload."
+            exit 1
+          fi
+
+  release:
+    needs: play-status
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.422
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: microsoft
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install MAUI workload
+        run: dotnet workload install maui
+
+      - name: Configure Android release signing
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        shell: pwsh
+        run: |
+          if (-not $env:ANDROID_KEYSTORE_BASE64) {
+            throw "ANDROID_KEYSTORE_BASE64 is required for production release signing."
+          }
+          $bytes = [Convert]::FromBase64String($env:ANDROID_KEYSTORE_BASE64)
+          $keystorePath = Join-Path $env:GITHUB_WORKSPACE "fca-mobile-release.keystore"
+          [IO.File]::WriteAllBytes($keystorePath, $bytes)
+          "KEYSTORE_PATH=$keystorePath" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Restore
+        run: dotnet restore FcaMobile.sln
+
+      - name: Publish signed Android AAB
+        shell: pwsh
+        run: |
+          $publishArgs = @(
+            "publish", "src/FcaMobile/FcaMobile.csproj",
+            "-c", "Release",
+            "-f", "net8.0-android",
+            "-p:AndroidPackageFormat=aab",
+            "-p:AndroidKeyStore=true",
+            "-p:AndroidSigningKeyStore=$env:KEYSTORE_PATH",
+            "-p:AndroidSigningStorePass=$env:ANDROID_KEYSTORE_PASSWORD",
+            "-p:AndroidSigningKeyAlias=$env:ANDROID_KEY_ALIAS",
+            "-p:AndroidSigningKeyPass=$env:ANDROID_KEY_PASSWORD"
+          )
+          dotnet @publishArgs
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - name: Locate AAB artifact
+        shell: pwsh
+        run: |
+          $root = Join-Path $env:GITHUB_WORKSPACE "release-artifacts"
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+          $aab = Get-ChildItem -Path "src/FcaMobile/bin/Release/net8.0-android" -Recurse -Filter "*.aab" |
+            Sort-Object LastWriteTime -Descending |
+            Select-Object -First 1
+          if (-not $aab) { throw "No AAB artifact found after publish." }
+          $aabOut = Join-Path $root "fca-mobile-release.aab"
+          Copy-Item $aab.FullName $aabOut -Force
+          Write-Host "AAB: $aabOut"
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fca-mobile-release-aab
+          path: release-artifacts/fca-mobile-release.aab
+          if-no-files-found: error
+
+  play-upload-production:
+    needs: [play-status, release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download AAB artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: fca-mobile-release-aab
+          path: release-artifacts
+
+      - name: Play Store production track
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.futurecontractorsofamerica.mobile
+          releaseFiles: release-artifacts/fca-mobile-release.aab
+          track: production
+          status: completed
