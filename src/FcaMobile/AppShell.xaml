@@ -10,6 +10,9 @@
                   ContentTemplate="{DataTemplate pages:WelcomePage}" />
 
     <TabBar Route="main">
+        <ShellContent Title="Auricrux"
+                      Route="auricrux"
+                      ContentTemplate="{DataTemplate pages:AuricruxPage}" />
         <ShellContent Title="Command Center"
                       Route="command"
                       ContentTemplate="{DataTemplate pages:CommandCenterPage}" />

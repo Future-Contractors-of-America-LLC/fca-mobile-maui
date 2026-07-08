@@ -25,6 +25,7 @@ public static class MauiProgram
         builder.Services.AddTransient<Pages.WelcomePage>();
         builder.Services.AddTransient<Pages.SignInPage>();
         builder.Services.AddTransient<Pages.GetStartedPage>();
+        builder.Services.AddTransient<Pages.AuricruxPage>();
         builder.Services.AddTransient<Pages.CommandCenterPage>();
         builder.Services.AddTransient<Pages.LeadPipelinePage>();
         builder.Services.AddTransient<Pages.JobSitesPage>();

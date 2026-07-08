@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Fca.Mobile.Pages.AuricruxPage"
+             Title="Auricrux Construction Expert"
+             BackgroundColor="#ECE8DF">
+
+    <Grid RowDefinitions="Auto,*,Auto,Auto" Padding="12">
+        
+        <!-- Header -->
+        <VerticalStackLayout Grid.Row="0" Padding="8" Spacing="8">
+            <Label Text="Auricrux" FontSize="32" FontAttributes="Bold" TextColor="#141D2B" />
+            <Label Text="Construction Expert" FontSize="13" FontAttributes="Bold" TextColor="#2A3B5B" />
+            
+            <HorizontalStackLayout Spacing="4">
+                <BoxView WidthRequest="8" HeightRequest="8" CornerRadius="4" BackgroundColor="#17A34A" VerticalOptions="Center" />
+                <Label x:Name="StatusLabel" Text="Online • Azure endpoint" FontSize="12" TextColor="#2A3B5B" FontAttributes="Bold" />
+            </HorizontalStackLayout>
+
+            <!-- Thinking Modes & Search Scope Selectors -->
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Thinking Mode" FontSize="11" FontAttributes="Bold" TextColor="#141D2B" />
+                <HorizontalStackLayout Spacing="6">
+                    <Button x:Name="QuickButton" Text="⚡ Quick" Clicked="OnThinkingModeSelected" 
+                            Padding="8" Style="{StaticResource BorderlessButtonDefault}" 
+                            CornerRadius="12" BackgroundColor="#FFFFFFA8" TextColor="#2B3651" />
+                    <Button x:Name="AutoButton" Text="🤖 Auto" Clicked="OnThinkingModeSelected" 
+                            Padding="8" Style="{StaticResource BorderlessButtonDefault}" 
+                            CornerRadius="12" BackgroundColor="#FFFFFFA8" TextColor="#2B3651" />
+                    <Button x:Name="DeepButton" Text="🧠 Deep" Clicked="OnThinkingModeSelected" 
+                            Padding="8" Style="{StaticResource BorderlessButtonDefault}" 
+                            CornerRadius="12" BackgroundColor="#FFFFFFA8" TextColor="#2B3651" />
+                </HorizontalStackLayout>
+
+                <Label Text="Search Scope" FontSize="11" FontAttributes="Bold" TextColor="#141D2B" Margin="0,8,0,0" />
+                <HorizontalStackLayout Spacing="6">
+                    <Button x:Name="InternalButton" Text="📚 Internal" Clicked="OnSearchScopeSelected" 
+                            Padding="8" Style="{StaticResource BorderlessButtonDefault}" 
+                            CornerRadius="12" BackgroundColor="#FFFFFFA8" TextColor="#2B3651" />
+                    <Button x:Name="PublicButton" Text="🌐 Public" Clicked="OnSearchScopeSelected" 
+                            Padding="8" Style="{StaticResource BorderlessButtonDefault}" 
+                            CornerRadius="12" BackgroundColor="#FFFFFFA8" TextColor="#2B3651" />
+                    <Button x:Name="BothButton" Text="🔄 Both" Clicked="OnSearchScopeSelected" 
+                            Padding="8" Style="{StaticResource BorderlessButtonDefault}" 
+                            CornerRadius="12" BackgroundColor="#FFFFFFA8" TextColor="#2B3651" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+            <!-- Quick Prompts -->
+            <CollectionView x:Name="PromptsCollection" SelectionMode="Single" SelectionChangedCommand="{Binding SelectPromptCommand}">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Horizontal" ItemSpacing="8" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Button Text="{Binding .}" Padding="10,8" FontSize="12" FontAttributes="Bold" 
+                                Clicked="OnQuickPromptClicked"
+                                CornerRadius="12" BackgroundColor="#FFFFFFC0" TextColor="#2B3651" 
+                                MaximumWidthRequest="280" />
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+
+        <!-- Chat Thread -->
+        <CollectionView Grid.Row="1" x:Name="ChatCollection" SelectionMode="None" Margin="0,8">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <VerticalStackLayout Padding="8" Spacing="4">
+                        <Label Text="{Binding Role, Converter={StaticResource RoleDisplayConverter}}" 
+                               FontSize="12" FontAttributes="Bold" TextColor="#2A3B5B" />
+                        <Label Text="{Binding Text}" FontSize="13" TextColor="#141D2B" 
+                               LineBreakMode="WordWrap" />
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Loading Indicator -->
+        <ActivityIndicator Grid.Row="1" x:Name="LoadingIndicator" IsRunning="False" IsVisible="False" 
+                           Color="#004D40" Scale="0.8" />
+
+        <!-- Action Buttons -->
+        <HorizontalStackLayout Grid.Row="2" Spacing="8" Padding="0,8" Margin="0,4">
+            <Button x:Name="ThumbsUpButton" Text="👍" Clicked="OnFeedbackUp" Padding="8" 
+                    CornerRadius="8" BackgroundColor="#FFFFFFC0" Flex="1" />
+            <Button x:Name="ThumbsDownButton" Text="👎" Clicked="OnFeedbackDown" Padding="8" 
+                    CornerRadius="8" BackgroundColor="#FFFFFFC0" Flex="1" />
+            <Button x:Name="MicButton" Text="🎙 Talk" Clicked="OnVoiceInput" Padding="8" 
+                    CornerRadius="8" BackgroundColor="#FFFFFFC0" Flex="1" />
+            <Button x:Name="SpeakerButton" Text="🔊 On" Clicked="OnToggleSpeaker" Padding="8" 
+                    CornerRadius="8" BackgroundColor="#FFFFFFC0" Flex="1" />
+        </HorizontalStackLayout>
+
+        <!-- Input Row -->
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Padding="0,8" ColumnSpacing="8">
+            <Entry Grid.Column="0" x:Name="MessageEntry" Placeholder="Ask anything about construction..." 
+                   TextChanged="OnMessageTextChanged" />
+            <Button Grid.Column="1" x:Name="SendButton" Text="Send" Clicked="OnSendMessage" 
+                    IsEnabled="False" Padding="16,8" />
+        </Grid>
+
+    </Grid>
+
+</ContentPage>
