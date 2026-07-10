@@ -86,13 +86,13 @@
         <!-- Action Buttons -->
         <HorizontalStackLayout Grid.Row="2" Spacing="8" Padding="0,8" Margin="0,4">
             <Button x:Name="ThumbsUpButton" Text="👍" Clicked="OnFeedbackUp" Padding="8" 
-                    CornerRadius="8" BackgroundColor="#FFFFFFC0" Flex="1" />
+                    CornerRadius="8" BackgroundColor="#FFFFFFC0" HorizontalOptions="FillAndExpand" />
             <Button x:Name="ThumbsDownButton" Text="👎" Clicked="OnFeedbackDown" Padding="8" 
-                    CornerRadius="8" BackgroundColor="#FFFFFFC0" Flex="1" />
+                    CornerRadius="8" BackgroundColor="#FFFFFFC0" HorizontalOptions="FillAndExpand" />
             <Button x:Name="MicButton" Text="🎙 Talk" Clicked="OnVoiceInput" Padding="8" 
-                    CornerRadius="8" BackgroundColor="#FFFFFFC0" Flex="1" />
+                    CornerRadius="8" BackgroundColor="#FFFFFFC0" HorizontalOptions="FillAndExpand" />
             <Button x:Name="SpeakerButton" Text="🔊 On" Clicked="OnToggleSpeaker" Padding="8" 
-                    CornerRadius="8" BackgroundColor="#FFFFFFC0" Flex="1" />
+                    CornerRadius="8" BackgroundColor="#FFFFFFC0" HorizontalOptions="FillAndExpand" />
         </HorizontalStackLayout>
 
         <!-- Input Row -->

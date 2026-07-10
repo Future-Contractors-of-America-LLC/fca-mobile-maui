@@ -280,15 +280,11 @@ public partial class AuricruxPage : ContentPage
         {
             if (text.Length > 0)
             {
-                await TextToSpeech.SpeakAsync(new SpeechOptions
+                await TextToSpeech.SpeakAsync(text, new SpeechOptions
                 {
-                    Locale = new Locale(new CultureInfo("en-US")),
                     Volume = (float)0.9,
                     Pitch = 1.0f
-                }, cancellationToken: CancellationToken.None);
-
-                // For actual speech, use the text parameter with TextToSpeech
-                await TextToSpeech.SpeakAsync(text);
+                });
             }
         }
         catch
