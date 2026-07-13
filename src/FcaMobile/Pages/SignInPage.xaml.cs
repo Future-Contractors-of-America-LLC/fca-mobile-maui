@@ -50,6 +50,7 @@ public partial class SignInPage : ContentPage
         _pendingChallengeId = null;
 
         var email = EmailEntry.Text?.Trim().ToLowerInvariant() ?? "";
+        // Keep password as typed; trailing autofill spaces are trimmed only at the edges.
         var password = PasswordEntry.Text?.Trim() ?? "";
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
         {
@@ -78,15 +79,18 @@ public partial class SignInPage : ContentPage
 
             if (!result.IsSuccessful || string.IsNullOrWhiteSpace(result.AccessToken))
             {
-                ShowStatus(result.ErrorMessage ?? "We could not verify those credentials. Check your email and password.");
+                var detail = result.ErrorMessage ?? "We could not verify those credentials.";
+                if (result.StatusCode == 401)
+                    detail = $"{detail}\nUse the same email/password as web login ({email}).";
+                ShowStatus(detail);
                 return;
             }
 
             await CompleteSignInAsync(email, result.AccessToken);
         }
-        catch
+        catch (Exception ex)
         {
-            ShowStatus("Sign in is temporarily unavailable. Check your connection and try again.");
+            ShowStatus($"Sign in is temporarily unavailable ({ex.GetType().Name}). Check connection to api.futurecontractorsofamerica.com.");
         }
         finally
         {

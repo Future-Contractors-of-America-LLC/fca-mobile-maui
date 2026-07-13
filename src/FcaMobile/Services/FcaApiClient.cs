@@ -38,6 +38,11 @@ public sealed class FcaApiClient
         PropertyNameCaseInsensitive = true,
     };
 
+    private static readonly JsonSerializerOptions WriteJsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    };
+
     public FcaApiClient(FcaConfig config, CustomerStore store)
     {
         _store = store;
@@ -46,17 +51,30 @@ public sealed class FcaApiClient
             BaseAddress = new Uri($"{config.PlatformBaseUrl.TrimEnd('/')}/api/"),
             Timeout = TimeSpan.FromSeconds(30),
         };
+        _http.DefaultRequestHeaders.Accept.Clear();
+        _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        _http.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "FCA-Mobile-MAUI/1.0");
     }
 
     public async Task<SignInResult> SignInAsync(string email, string password, CancellationToken ct = default)
     {
-        using var response = await _http.PostAsJsonAsync("customer-login", new { email, password }, ct);
+        // Dictionary keys stay lowercase regardless of serializer naming quirks on device runtimes.
+        var payload = new Dictionary<string, string>
+        {
+            ["email"] = (email ?? "").Trim().ToLowerInvariant(),
+            ["password"] = password ?? "",
+        };
+        using var content = new StringContent(
+            JsonSerializer.Serialize(payload, WriteJsonOptions),
+            System.Text.Encoding.UTF8,
+            "application/json");
+        using var response = await _http.PostAsync("customer-login", content, ct);
         var json = await response.Content.ReadAsStringAsync(ct);
         using var doc = TryParseJson(json);
         if (doc is null)
         {
             // #region agent log
-            AgentLog("H4", "sign-in invalid json", new { status = (int)response.StatusCode });
+            AgentLog("H4", "sign-in invalid json", new { status = (int)response.StatusCode, baseAddress = _http.BaseAddress?.ToString() });
             // #endregion
             return new SignInResult(false, null, "Sign in returned an invalid response.", (int)response.StatusCode);
         }
@@ -68,7 +86,13 @@ public sealed class FcaApiClient
                 ? errorNode.GetString()
                 : null;
             // #region agent log
-            AgentLog("H1", "sign-in rejected", new { status = (int)response.StatusCode, error });
+            AgentLog("H1", "sign-in rejected", new
+            {
+                status = (int)response.StatusCode,
+                error,
+                email = payload["email"],
+                baseAddress = _http.BaseAddress?.ToString(),
+            });
             // #endregion
             return new SignInResult(false, null, error ?? "We could not verify those credentials.", (int)response.StatusCode);
         }
@@ -112,7 +136,16 @@ public sealed class FcaApiClient
 
     public async Task<SignInResult> VerifySignInAsync(string challengeId, string code, CancellationToken ct = default)
     {
-        using var response = await _http.PostAsJsonAsync("customer-verify", new { challengeId, code }, ct);
+        var payload = new Dictionary<string, string>
+        {
+            ["challengeId"] = challengeId ?? "",
+            ["code"] = code ?? "",
+        };
+        using var content = new StringContent(
+            JsonSerializer.Serialize(payload, WriteJsonOptions),
+            System.Text.Encoding.UTF8,
+            "application/json");
+        using var response = await _http.PostAsync("customer-verify", content, ct);
         var json = await response.Content.ReadAsStringAsync(ct);
         using var doc = TryParseJson(json);
         if (doc is null)
@@ -323,7 +356,7 @@ public sealed class FcaApiClient
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         if (payload is not null)
-            request.Content = JsonContent.Create(payload, options: JsonOptions);
+            request.Content = JsonContent.Create(payload, options: WriteJsonOptions);
 
         ct.ThrowIfCancellationRequested();
         return request;
