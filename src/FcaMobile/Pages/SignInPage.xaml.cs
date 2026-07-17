@@ -140,8 +140,17 @@ public partial class SignInPage : ContentPage
 
     private async Task CompleteSignInAsync(string email, string token)
     {
-        _store.Save(new CustomerProfile { Email = email });
         await _store.SaveAccessTokenAsync(token);
+        CustomerProfile? profile = null;
+        try
+        {
+            profile = await _api.GetCustomerProfileAsync();
+        }
+        catch
+        {
+            // A valid login must not fail just because profile hydration is temporarily unavailable.
+        }
+        _store.Save(profile ?? new CustomerProfile { Email = email });
         PasswordEntry.Text = "";
         VerificationCodeEntry.Text = "";
         VerificationPanel.IsVisible = false;

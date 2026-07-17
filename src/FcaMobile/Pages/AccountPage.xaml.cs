@@ -1,3 +1,4 @@
+using Fca.Mobile.Models;
 using Fca.Mobile.Services;
 
 namespace Fca.Mobile.Pages;
@@ -16,10 +17,29 @@ public partial class AccountPage : ContentPage
         InitializeComponent();
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
-        var profile = _store.Load();
+        RenderProfile(_store.Load());
+
+        try
+        {
+            var profile = await _api.GetCustomerProfileAsync();
+            if (profile is not null)
+            {
+                _store.Save(profile);
+                RenderProfile(profile);
+            }
+        }
+        catch
+        {
+            // Keep the cached profile visible while offline.
+        }
+    }
+
+    private void RenderProfile(CustomerProfile? profile)
+    {
+        NameLabel.Text = string.IsNullOrWhiteSpace(profile?.Name) ? "Name not set" : profile.Name;
         CompanyLabel.Text = string.IsNullOrWhiteSpace(profile?.Company) ? "Company not set" : profile.Company;
         EmailLabel.Text = string.IsNullOrWhiteSpace(profile?.Email) ? "Not signed in" : profile.Email;
         PlanLabel.Text = string.IsNullOrWhiteSpace(profile?.Plan) ? "Plan: startup" : $"Plan: {profile.Plan}";
@@ -30,6 +50,9 @@ public partial class AccountPage : ContentPage
 
     async void OnBillingClicked(object sender, EventArgs e) =>
         await Launcher.OpenAsync(new Uri($"{_config.WebsiteUrl.TrimEnd('/')}/portal/billing"));
+
+    async void OnProfileClicked(object sender, EventArgs e) =>
+        await Launcher.OpenAsync(new Uri(_config.BuildPortalHandoffUrl("/portal/profile")));
 
     async void OnSignOutClicked(object sender, EventArgs e)
     {

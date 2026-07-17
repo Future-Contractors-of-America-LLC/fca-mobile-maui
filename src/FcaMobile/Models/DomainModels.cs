@@ -19,10 +19,12 @@ public sealed class BidRecord
 
 public sealed class ProjectRecord
 {
-    public string? Id { get; set; }
-    public string? Name { get; set; }
+    public string? ProjectId { get; set; }
+    public string? ProjectName { get; set; }
+    public string? ProjectNumber { get; set; }
+    public string? Status { get; set; }
     public string? Stage { get; set; }
-    public string? NextStep { get; set; }
+    public string? NextAction { get; set; }
 }
 
 public sealed class FileRecord
