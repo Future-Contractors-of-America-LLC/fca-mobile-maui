@@ -199,6 +199,36 @@ public sealed class FcaApiClient
         }
     }
 
+    public async Task<CustomerProfile?> GetCustomerProfileAsync(CancellationToken ct = default)
+    {
+        var json = await GetRawAsync("customer-session", ct);
+        if (string.IsNullOrWhiteSpace(json))
+            return null;
+
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+        if (!root.TryGetProperty("authenticated", out var authenticated) ||
+            authenticated.ValueKind != JsonValueKind.True ||
+            !root.TryGetProperty("account", out var account) ||
+            account.ValueKind != JsonValueKind.Object)
+            return null;
+
+        var profile = account.TryGetProperty("profile", out var profileNode) &&
+                      profileNode.ValueKind == JsonValueKind.Object
+            ? profileNode
+            : default;
+
+        return new CustomerProfile
+        {
+            Email = ReadString(account, "email"),
+            Company = ReadString(account, "company"),
+            Plan = ReadString(account, "selectedPlan", "startup"),
+            Name = profile.ValueKind == JsonValueKind.Object
+                ? ReadString(profile, "fullName")
+                : "",
+        };
+    }
+
     public async Task<IReadOnlyList<BidRecord>> GetLeadsAsync(CancellationToken ct = default)
     {
         var json = await GetRawAsync("bids", ct);
@@ -374,6 +404,13 @@ public sealed class FcaApiClient
             return TryReadAccessToken(session);
 
         return null;
+    }
+
+    private static string ReadString(JsonElement node, string propertyName, string fallback = "")
+    {
+        return node.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String
+            ? value.GetString() ?? fallback
+            : fallback;
     }
 
     private static JsonDocument? TryParseJson(string json)

@@ -5,7 +5,9 @@
              Title="Job Sites">
 
     <RefreshView x:Name="RefreshHost" Refreshing="OnRefreshing">
-        <CollectionView x:Name="JobList" SelectionMode="None">
+        <CollectionView x:Name="JobList"
+                        SelectionMode="Single"
+                        SelectionChanged="OnJobSelected">
             <CollectionView.EmptyView>
                 <VerticalStackLayout Padding="24" Spacing="8">
                     <Label Text="No active jobs" Style="{StaticResource Headline}" FontSize="22" />
@@ -16,9 +18,11 @@
                 <DataTemplate>
                     <Border Style="{StaticResource Card}" Margin="16,8">
                         <VerticalStackLayout Spacing="4">
-                            <Label Text="{Binding Name}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
+                            <Label Text="{Binding ProjectName}" FontAttributes="Bold" TextColor="{StaticResource Navy}" />
+                            <Label Text="{Binding ProjectNumber}" Style="{StaticResource Subhead}" />
                             <Label Text="{Binding Stage}" TextColor="{StaticResource Blue}" />
-                            <Label Text="{Binding NextStep}" Style="{StaticResource Subhead}" />
+                            <Label Text="{Binding NextAction}" Style="{StaticResource Subhead}" />
+                            <Label Text="Tap to open project" FontAttributes="Bold" TextColor="{StaticResource Blue}" />
                         </VerticalStackLayout>
                     </Border>
                 </DataTemplate>
