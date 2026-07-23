@@ -43,6 +43,18 @@ Encode keystore:
 1. GitHub → **Actions** → **MAUI Android Release** → **Run workflow**
 2. Confirm job succeeds; download APK and AAB artifacts
 3. Check email for Firebase App Distribution invite; install on Android device
+
+## Firebase email spam guard
+
+`MAUI Android Release` emails the **internal** tester group on every Firebase upload.
+Manual `workflow_dispatch` defaults to **no** Firebase upload. To distribute intentionally:
+
+```bash
+gh workflow run "MAUI Android Release" --repo Future-Contractors-of-America-LLC/fca-mobile-maui \
+  -f distribute_firebase=true -f upload_play=true
+```
+
+Pushes to `main` that change `src/**` still distribute once. Duplicate APK SHA uploads are skipped.
 4. Smoke test: Command Center, Leads, Jobs, Training
 
 ## 5. Phase 2 — Google Play internal track

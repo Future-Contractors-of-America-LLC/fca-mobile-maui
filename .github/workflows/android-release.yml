@@ -1,13 +1,36 @@
 name: MAUI Android Release
 
+# Builds signed Android packages for FCA Contractor Command.
+# Firebase App Distribution emails every tester on EACH upload — so distribution
+# is opt-in for workflow_dispatch and automatic only on real main pushes.
+
 on:
   workflow_dispatch:
+    inputs:
+      distribute_firebase:
+        description: "Upload APK to Firebase App Distribution (emails testers)"
+        type: boolean
+        required: true
+        default: false
+      upload_play:
+        description: "Upload AAB to Play internal track when Play API is ready"
+        type: boolean
+        required: true
+        default: true
   push:
     branches: [main]
     paths:
       - "src/**"
       - ".github/workflows/android-release.yml"
       - "FcaMobile.sln"
+
+concurrency:
+  group: maui-android-release-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: write
 
 jobs:
   play-status:
@@ -30,7 +53,7 @@ jobs:
           pip install -q google-auth requests
           python scripts/ci_probe_play_ready.py
           if [ "$(grep '^ready=' "$GITHUB_OUTPUT" | tail -1 | cut -d= -f2)" != "true" ]; then
-            echo "::notice::Play Console not linked yet — APK + Firebase only until org verification completes."
+            echo "::notice::Play Console not linked yet — APK + optional Firebase only until org verification completes."
           fi
 
   release:
@@ -101,7 +124,7 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
       - name: Publish signed Android AAB
-        if: needs.play-status.outputs.ready == 'true'
+        if: needs.play-status.outputs.ready == 'true' && (github.event_name == 'push' || inputs.upload_play == true)
         shell: pwsh
         run: |
           $publishArgs = @(
@@ -140,13 +163,16 @@ jobs:
           if (-not $apk) { throw "No APK artifact found after publish." }
           $apkOut = Join-Path $root "fca-mobile-release.apk"
           Copy-Item $apk.FullName $apkOut -Force
+          $hash = (Get-FileHash -Algorithm SHA256 $apkOut).Hash.ToLowerInvariant()
           Write-Host "APK: $apkOut"
+          Write-Host "APK_SHA256=$hash"
+          "apk_sha256=$hash" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           if ($aab) {
             $aabOut = Join-Path $root "fca-mobile-release.aab"
             Copy-Item $aab.FullName $aabOut -Force
             Write-Host "AAB: $aabOut"
           } else {
-            Write-Host "::notice::AAB skipped — Play Console not linked yet."
+            Write-Host "::notice::AAB skipped — Play Console not linked yet or upload_play=false."
           }
 
       - name: Upload APK artifact
@@ -157,7 +183,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload AAB artifact
-        if: needs.play-status.outputs.ready == 'true'
+        if: needs.play-status.outputs.ready == 'true' && (github.event_name == 'push' || inputs.upload_play == true)
         uses: actions/upload-artifact@v4
         with:
           name: fca-mobile-release-aab
@@ -166,6 +192,11 @@ jobs:
 
   distribute:
     needs: release
+    # Push to main always distributes once per code change.
+    # Manual dispatch must opt in — prevents agent/loop spam emailing testers.
+    if: >
+      always() && needs.release.result == 'success' &&
+      (github.event_name == 'push' || inputs.distribute_firebase == true)
     runs-on: ubuntu-latest
     steps:
       - name: Download APK artifact
@@ -187,20 +218,50 @@ jobs:
             echo "::notice::FIREBASE_APP_ID or FIREBASE_SERVICE_ACCOUNT_JSON not set — skipping distribution."
           fi
 
-      - name: Firebase App Distribution
+      - name: Skip duplicate APK (same SHA already distributed)
+        id: dedupe
         if: steps.firebase.outputs.configured == 'true'
+        env:
+          LAST_SHA: ${{ vars.FCA_MOBILE_LAST_DISTRIBUTED_APK_SHA }}
+        run: |
+          set -euo pipefail
+          HASH=$(sha256sum release-artifacts/fca-mobile-release.apk | awk '{print $1}')
+          echo "apk_sha256=$HASH" >> "$GITHUB_OUTPUT"
+          if [ -n "${LAST_SHA:-}" ] && [ "$HASH" = "$LAST_SHA" ]; then
+            echo "duplicate=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::APK SHA $HASH already distributed — skipping Firebase upload (no tester emails)."
+          else
+            echo "duplicate=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Firebase App Distribution
+        if: steps.firebase.outputs.configured == 'true' && steps.dedupe.outputs.duplicate != 'true'
         uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
           appId: ${{ secrets.FIREBASE_APP_ID }}
           serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           groups: internal
           file: release-artifacts/fca-mobile-release.apk
-          releaseNotes: "FCA Contractor Command release from ${{ github.sha }}"
+          releaseNotes: "FCA Contractor Command ${{ github.sha }} (run ${{ github.run_id }})"
         continue-on-error: true
+
+      - name: Record distributed APK SHA
+        if: steps.firebase.outputs.configured == 'true' && steps.dedupe.outputs.duplicate != 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HASH: ${{ steps.dedupe.outputs.apk_sha256 }}
+        run: |
+          set -euo pipefail
+          # Best-effort: remember last distributed APK so redispatches do not re-email.
+          gh variable set FCA_MOBILE_LAST_DISTRIBUTED_APK_SHA --body "$HASH" --repo "$GITHUB_REPOSITORY" || true
 
   play-upload:
     needs: [play-status, release]
-    if: needs.play-status.outputs.ready == 'true'
+    if: >
+      always() && needs.release.result == 'success' &&
+      needs.play-status.outputs.ready == 'true' &&
+      (github.event_name == 'push' || inputs.upload_play == true)
     runs-on: ubuntu-latest
     steps:
       - name: Download AAB artifact
