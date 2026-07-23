@@ -20,8 +20,8 @@ on:
   push:
     branches: [main]
     paths:
+      # Only product code changes auto-build+distribute. Workflow edits must not email testers.
       - "src/**"
-      - ".github/workflows/android-release.yml"
       - "FcaMobile.sln"
 
 concurrency:
